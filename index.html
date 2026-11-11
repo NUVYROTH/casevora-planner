@@ -116,6 +116,32 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;font-w
 .bar{height:10px;background:var(--gray-s);border-radius:999px;overflow:hidden;min-width:60px}
 .bar i{display:block;height:100%;background:var(--green);border-radius:999px}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.hc-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.hc-top .ptitle{flex:1 1 360px;min-width:0}
+.ptitle h1{font-size:28px;margin:0 0 2px;line-height:1.3}
+.eyebrow{display:flex;align-items:center;gap:10px;margin:0 0 8px;font-size:12px;font-weight:800;letter-spacing:.22em;color:var(--gold)}
+.eyebrow::before{content:"";width:28px;height:2px;background:var(--gold);border-radius:2px;flex:none}
+.ptitle .pdesc{font-size:14.5px;color:var(--muted)}
+.hc-mode{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.lbadge{background:var(--green-s);color:var(--green);border-radius:999px;padding:3px 12px;font-weight:700;font-size:12.5px;white-space:nowrap}
+button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
+.alert{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:#fdecea;color:#8a1c12;border:1px solid #e3a59c;border-left:5px solid #8a1c12;border-radius:8px;padding:10px 14px;margin:0 0 14px;font-size:14px;line-height:1.7}
+.alert .a1{flex:1 1 260px;font-weight:700}
+.atag{flex:none;background:#8a1c12;color:#fff;font-weight:700;font-size:12.5px;border-radius:4px;padding:2px 8px;letter-spacing:.1em}
+.alink{flex:none;background:transparent;border:1px solid #e3a59c;color:#8a1c12;font-size:13px;padding:4px 10px}
+.alink:hover{background:#fff}
+.flowh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding-bottom:12px;margin-bottom:14px;border-bottom:1px solid var(--line)}
+.flowh b{font-size:16px}.flowh span{font-size:13px;color:var(--muted)}
+.fsteps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.fstep{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--card)}
+.fno{font-size:11.5px;font-weight:800;letter-spacing:.12em;color:var(--gold);margin-bottom:6px}
+.fstep b{font-size:14.5px}
+.fstep p{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6}
+#guide summary{cursor:pointer;font-weight:700;font-size:15px}
+.gh{margin:14px 0 6px;font-size:14px;border-left:3px solid var(--gold);padding-left:6px}
+#guide ul,#guide ol{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.8}
+.pfoot{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 0;letter-spacing:.04em}
+@media(max-width:899px){.hc-mode{align-items:flex-start;flex-direction:row;flex-wrap:wrap}.ptitle h1{font-size:24px}.eyebrow{font-size:11px;letter-spacing:.14em}}
 .phead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
 .phead .pt{flex:1;min-width:200px}.phead h1{margin:0}
 .hg{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:stretch;margin-bottom:14px}
@@ -300,17 +326,38 @@ function rHome(){
   const kp=(l,n,sub,c,f)=>`<div class="k ${c}" role="button" tabindex="0" onclick="${f}" onkeydown="if(event.key==='Enter')${f}"><div class="kl">${l}</div><div class="kn">${n}</div><div class="ks">${sub}</div></div>`;
   const mDue=L.filter(t=>t.due>=ms&&t.due<=me), mDone=mDue.filter(t=>t.status==='已完成').length, rate=mDue.length?Math.round(mDone/mDue.length*100):null;
   const pend=[...S.over.sort(byDue),...open.filter(t=>t.due>=td&&t.due<=addDays(td,t.remind??7)).sort(byDue)], P=pend.slice(0,10);
-  $('#app').innerHTML=`<div class="phead"><div class="pt"><h1>工作總覽</h1><div class="muted small">${fmt(td)}（週${'一二三四五六日'[dow(td)]}）｜打開就知道今天該做什麼</div></div><button class="primary" onclick="addUI()">＋ 新增工作</button></div>
+  $('#app').innerHTML=`<div class="hc-top"><div class="ptitle"><h1>品研工作行事曆</h1><div class="eyebrow">QA WORK PLANNER</div><div class="pdesc">定期工作自動排程、不定期案件追蹤到完成，打開就知道今天該做什麼。</div><div class="small muted" style="margin-top:4px">今天 ${fmt(td)}（週${'一二三四五六日'[dow(td)]}）</div></div><div class="hc-mode"><span class="lbadge">● 本機資料模式</span><button class="primary pillnew" onclick="addUI()">＋ 新增工作</button></div></div>
+  <div class="alert" role="note"><span class="atag">重要</span><span class="a1">本機儲存 · 僅在此裝置此瀏覽器有效 · 請勿用無痕視窗 · 每週下載備份</span><button class="alink" onclick="openGuide()">查看使用說明</button></div>
   <div class="kpi">${kp('今日待辦',S.today.length,'尚未完成工作','blue',"setLf({range:'today',st:'未完成'})")}${kp('即將到期',S.soon.length,'提醒期內（預設 7 天）','amber',"setLf({range:'all',st:'即將到期'})")}${kp('逾期工作',S.over.length,S.over.length?'需要優先處理':'目前沒有逾期 ✓','red'+(S.over.length?' hot':''),"setLf({range:'all',st:'逾期'})")}${kp('本月完成率',rate===null?'—':rate+'%',mDue.length?`本月到期 ${mDone} / ${mDue.length} 項已完成`:'本月沒有到期工作','green',"setLf({range:'month',st:''})")}</div>
   <div class="minis"><span>本週待辦 <a href="#" onclick="setLf({range:'week',st:'未完成'});return false">${S.week.length}</a></span><span>本月待辦 <a href="#" onclick="setLf({range:'month',st:'未完成'});return false">${S.month.length}</a></span><span>待追蹤 <a href="#" onclick="setLf({range:'all',st:'待追蹤'});return false">${S.follow.length}</a></span><span>本月已完成 <a href="#" onclick="setLf({range:'month',st:'已完成'});return false">${S.done.length}</a></span></div>
   <div class="hg"><div class="card"><div class="chd"><h2>最近 14 天完成數</h2><span class="small muted">依完成日期・單位：項</span></div><div class="chart">${barChart(L)}</div></div>
    <div class="card"><div class="chd"><h2>${+td.slice(5,7)} 月行事曆</h2><a href="#" class="small" onclick="calMode='month';calM=today().slice(0,7);go('cal');return false">開啟 →</a></div>${miniCal(L)}</div></div>
   <div class="hg"><div class="card"><div class="chd"><h2>待處理工作（${pend.length}）</h2><a href="#" class="small" onclick="setLf({range:'all',st:'未完成'});return false">看全部 →</a></div>
     ${P.length?`<div style="overflow-x:auto"><table class="ptab"><thead><tr><th>工作名稱</th><th>狀態</th><th class="cdue">期限</th><th class="cfile">附件</th><th></th></tr></thead><tbody>${P.map(t=>{const s2=eff(t);return `<tr class="rw" onclick="openTask('${t.id}')"><td><div class="tn">${esc(t.name)}</div><div class="small muted">${esc(t.category)}・${esc(t.freq||'單次')}</div></td><td><span class="badge b-${s2}">${s2}</span></td><td class="cdue" style="white-space:nowrap">${md(t.due)}</td><td class="cfile" data-fc="${t.id}">—</td><td style="text-align:right"><button class="sm primary" onclick="event.stopPropagation();completeTask('${t.id}');render()">完成</button></td></tr>`;}).join('')}</tbody></table></div>${pend.length>10?`<div class="small muted" style="margin-top:6px">只顯示前 10 項（逾期優先）</div>`:''}`:'<div class="empty">目前沒有逾期或即將到期的工作 ✓</div>'}</div>
-   <div class="card"><div class="chd"><h2>${td.slice(0,4)} 每月完成率</h2><a href="#" class="small" onclick="go('stats');return false">統計 →</a></div><div class="chart">${lineChart()}</div><div class="small muted">完成率＝該月原定工作中已完成的比例</div></div></div>`;
+   <div class="card"><div class="chd"><h2>${td.slice(0,4)} 每月完成率</h2><a href="#" class="small" onclick="go('stats');return false">統計 →</a></div><div class="chart">${lineChart()}</div><div class="small muted">完成率＝該月原定工作中已完成的比例</div></div></div>
+  <div class="card"><div class="flowh"><div><b>標準工作流程</b><br><span>用一致流程管理每一項品研工作</span></div><button onclick="openGuide()">查看使用說明 →</button></div>
+   <div class="fsteps">${[['設定定期工作','在「定期工作設定」建立規則，系統自動產生本月與下個月的工作。'],['每日檢視','打開總覽看今日待辦、即將到期與逾期，逾期的優先處理。'],['執行與紀錄','上傳附件、寫工作紀錄；來不及時按「延期」並填寫原因。'],['完成確認','按「完成」記錄完成日，定期工作會自動產生下一期。'],['統計回顧','在「工作統計分析」看每月完成率，匯出 CSV 供管理審查。']].map(([t,d],i)=>`<div class="fstep"><div class="fno">STEP 0${i+1}</div><b>${t}</b><p>${d}</p></div>`).join('')}</div></div>
+  <details class="card" id="guide"><summary>使用說明（請務必閱讀）</summary>
+   <div class="gh">資料保存與安全</div><div class="small">本工具將資料保存在<b>這台電腦的這個瀏覽器</b>中，不會上傳到任何伺服器。關閉網頁後重新開啟，資料仍會保留。</div>
+   <ul><li>清除瀏覽資料時，若勾選<b>「Cookie 和其他網站資料」，所有工作、紀錄與附件都會被刪除，且無法復原</b>。</li>
+    <li><b>請不要使用無痕視窗</b>，關閉後資料會遺失。</li>
+    <li>請<b>每週按一次「下載備份」</b>（在「系統設定」），存到雲端硬碟；備份檔可用「從備份還原」匯回（還原會取代目前資料）。</li>
+    <li><b>換電腦或換瀏覽器就看不到</b>原本的資料（例如 Chrome 存的資料，Edge 看不到）。</li>
+    <li>請<b>固定用同一個瀏覽器、從同一個網址開啟</b>（建議加入書籤）。網址不同會被當成不同地方，資料不互通。</li>
+    <li>附件存在瀏覽器的大容量儲存空間（IndexedDB），一樣<b>只在這台電腦、這個瀏覽器</b>，單檔上限 20 MB。<span id="gsz"></span></li>
+    <li>無法多人共用同一份資料。請只用<b>假資料</b>測試，不要放真實客訴客人的姓名、電話。</li></ul>
+   <div class="gh">操作步驟</div>
+   <ol><li>到「定期工作設定」確認或新增定期工作規則（頻率、日期、提醒天數）。</li>
+    <li>每天打開「工作總覽」，從待處理工作表點進工作，或直接按「完成」。</li>
+    <li>在工作內容頁加入附件、寫工作紀錄；需要延期時按「延期」並填寫原因（原本期限會保留）。</li>
+    <li>不定期案件（客訴、異常、供應商評鑑等）到「不定期工作」新增；收到委外檢驗報告可自動產生 15 日內期限的工作。</li>
+    <li>「工作行事曆」可切換月／週／清單檢視；「文件及工作紀錄」可集中搜尋所有附件與紀錄。</li>
+    <li>「工作統計分析」看計畫 vs 實際與每月完成率，可匯出 CSV；「系統設定」可下載備份、從備份還原。</li></ol></details>
+  <div class="pfoot">CASEVORAS QA PLANNER ・ 個人工作站 ・ 本機資料模式</div>`;
   fAll().then(a=>{const c={};a.forEach(f=>c[f.taskId]=(c[f.taskId]||0)+1);document.querySelectorAll('[data-fc]').forEach(el=>{const n=c[el.dataset.fc];el.textContent=n?'📎 '+n:'—';});}).catch(()=>{});
   bindTips();
 }
+function openGuide(){ const g=$('#guide'); if(!g){go('home',()=>openGuide());return;} g.open=true; g.scrollIntoView({behavior:'smooth',block:'start'}); if(navigator.storage&&navigator.storage.estimate) navigator.storage.estimate().then(e=>{const el=$('#gsz'); if(el) el.textContent=' 目前已使用約 '+fsize(e.usage||0)+'。';}).catch(()=>{}); }
 function bindTips(){ let tip=null; document.querySelectorAll('[data-tip]').forEach(el=>{
   const show=e=>{ if(!tip){tip=document.createElement('div');tip.className='ctip';document.body.appendChild(tip);} tip.textContent=el.dataset.tip; const r=el.getBoundingClientRect(); tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,r.left+r.width/2-tip.offsetWidth/2))+'px'; tip.style.top=Math.max(8,r.top-tip.offsetHeight-8)+'px'; };
   const hide=()=>{ if(tip){tip.remove();tip=null;} };
