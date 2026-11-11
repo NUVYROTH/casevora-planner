@@ -66,6 +66,17 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;font-w
 .cal .d.out{background:#f7f9fc;color:#a8b1c6}.cal .d.we{background:#f9fafc}
 .cal .d.today{border:2px solid var(--navy2)}.cal .d.sel{outline:2px solid var(--blue)}
 .cal .d .num{font-size:13px;font-weight:700}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;margin-bottom:12px}
+.seg button{border:0;border-radius:0;padding:8px 16px;font-weight:700;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--navy2);color:#fff}
+.wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.wk .wd{border:1px solid var(--line);border-radius:12px;background:#fff;min-height:160px;padding:6px;min-width:0}
+.wk .wd.we{background:#f9fafc}.wk .wd.today{border:2px solid var(--navy2)}
+.wk .wh{font-size:13px;font-weight:800;color:var(--ink);margin-bottom:4px;display:flex;justify-content:space-between;gap:4px}
+.wk .wh span{color:var(--muted);font-weight:700}
+.wk .wt{display:block;width:100%;text-align:left;font-size:12px;border-radius:7px;padding:4px 6px;margin-top:4px;border:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
+.wk .wn{font-size:12px;color:#a8b1c6;margin-top:6px}
 .chip{display:block;font-size:11px;border-radius:5px;padding:0 4px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-未開始{background:var(--gray-s);color:#44506b}.c-進行中{background:var(--blue-s);color:var(--blue)}.c-待追蹤{background:var(--amber-s);color:var(--amber)}.c-已完成{background:var(--green-s);color:var(--green)}.c-逾期{background:var(--red-s);color:var(--red)}
 .empty{text-align:center;padding:20px;color:var(--muted)}
@@ -85,6 +96,8 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
  .savebar{left:0;padding:10px 12px}
  .cal .d{min-height:56px}.chip{font-size:10px}
  .kpi{grid-template-columns:repeat(2,1fr);gap:10px}.kpi .kn{font-size:28px}
+ .wk{grid-template-columns:1fr;gap:6px}.wk .wd{min-height:0;display:grid;grid-template-columns:64px 1fr;gap:4px 10px;align-items:start}.wk .wh{flex-direction:column;justify-content:flex-start;margin:0}.wk .wt{font-size:13px;margin-top:0;margin-bottom:4px;white-space:normal}.wk .wn{margin-top:2px}
+ .seg button{padding:8px 12px}
 }
 </style>
 </head>
@@ -191,6 +204,7 @@ function completeTask(id){
 function undoComplete(id){const t=TASKS.find(x=>x.id===id); if(!t) return; t.status='進行中'; t.doneDate=''; persist();}
 
 /* ---------- 導覽 ---------- */
+let calMode='month', calW=wkStart(today());
 let view='home', cur=null, dirty=false, calM=today().slice(0,7), calSel=today(), lf={q:'',cat:'',st:'',freq:'',range:'month'}, selT=new Set(), prev='home';
 const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
 function side(){
@@ -240,14 +254,29 @@ function quickAdd(){
 function setLf(o){lf=Object.assign({q:'',cat:'',st:'',freq:'',range:'month'},o);go('list');}
 
 /* ---------- 行事曆 ---------- */
+function calSeg(){return `<div class="seg" role="tablist">${[['month','月檢視'],['week','週檢視'],['list','清單檢視']].map(([k,n])=>`<button class="${calMode===k?'on':''}" onclick="calMode='${k}';rCal()">${n}</button>`).join('')}</div>`;}
 function rCal(){
+  if(calMode==='week') return rWeek(); if(calMode==='list') return rCalList();
   const [y,m]=calM.split('-').map(Number), first=`${y}-${p2(m)}-01`, start=wkStart(first), td=today(); let cells='';
   for(let i=0;i<42;i++){ const d=addDays(start,i), inM=d.slice(0,7)===calM, ts=live().filter(t=>t.due===d).sort(byDue); const w=dow(d)>=5;
     cells+=`<div class="d ${inM?'':'out'} ${w?'we':''} ${d===td?'today':''} ${d===calSel?'sel':''}" onclick="calSel='${d}';rCal()"><div class="num">${+d.slice(8)}</div>${ts.slice(0,3).map(t=>`<span class="chip c-${eff(t)}">${esc(t.name)}</span>`).join('')}${ts.length>3?`<span class="small muted">+${ts.length-3}</span>`:''}</div>`; if(i===34&&addDays(start,35).slice(0,7)!==calM) break; }
   const sel=live().filter(t=>t.due===calSel).sort(byDue);
-  $('#app').innerHTML=`<h1>工作行事曆</h1><div class="card"><div class="row" style="margin-bottom:10px"><button onclick="calMove(-1)">← 上個月</button><b style="font-size:17px">${y} 年 ${m} 月</b><button onclick="calMove(1)">下個月 →</button><button onclick="calM=today().slice(0,7);calSel=today();rCal()">回到今天</button><span class="spacer"></span><span class="small muted">灰＝未開始 藍＝進行中 黃＝待追蹤 綠＝完成 紅＝逾期</span></div>
+  $('#app').innerHTML=`<h1>工作行事曆</h1>${calSeg()}<div class="card"><div class="row" style="margin-bottom:10px"><button onclick="calMove(-1)">← 上個月</button><b style="font-size:17px">${y} 年 ${m} 月</b><button onclick="calMove(1)">下個月 →</button><button onclick="calM=today().slice(0,7);calSel=today();rCal()">回到今天</button><span class="spacer"></span><span class="small muted">灰＝未開始 藍＝進行中 黃＝待追蹤 綠＝完成 紅＝逾期</span></div>
   <div class="cal">${['一','二','三','四','五','六','日'].map(x=>`<div class="h">${x}</div>`).join('')}${cells}</div></div>
   <div class="card"><h2>${fmt(calSel)}（週${'一二三四五六日'[dow(calSel)]}）的工作</h2>${sel.length?sel.map(t=>taskRow(t)).join(''):'<div class="empty">這天沒有工作</div>'}<div class="row" style="margin-top:8px"><button onclick="go('adhoc')">到「不定期工作」新增案件</button></div></div>`;
+}
+function rWeek(){
+  const td=today(), we=addDays(calW,6), L=live(); let cols='';
+  for(let i=0;i<7;i++){ const d=addDays(calW,i), ts=L.filter(t=>t.due===d).sort(byDue);
+    cols+=`<div class="wd ${i>=5?'we':''} ${d===td?'today':''}"><div class="wh">週${'一二三四五六日'[i]}<span>${md(d)}${d===td?'・今天':''}</span></div><div>${ts.length?ts.map(t=>`<button class="wt c-${eff(t)}" title="${esc(t.name)}" onclick="openTask('${t.id}')">${esc(t.name)}</button>`).join(''):'<div class="wn">沒有工作</div>'}</div></div>`; }
+  const open=L.filter(t=>t.due>=calW&&t.due<=we&&t.status!=='已完成').length;
+  $('#app').innerHTML=`<h1>工作行事曆</h1>${calSeg()}<div class="card"><div class="row" style="margin-bottom:10px"><button onclick="calW=addDays(calW,-7);rWeek()">← 上一週</button><b style="font-size:17px">${fmt(calW)} – ${md(we)}</b><button onclick="calW=addDays(calW,7);rWeek()">下一週 →</button><button onclick="calW=wkStart(today());rWeek()">回到本週</button><span class="spacer"></span><span class="small muted">本週未完成 ${open} 項・點工作可看內容</span></div>
+  <div class="wk">${cols}</div><div class="small muted" style="margin-top:8px">灰＝未開始 藍＝進行中 黃＝待追蹤 綠＝完成 紅＝逾期</div></div>`;
+}
+function rCalList(){
+  const [y,m]=calM.split('-').map(Number), ms=calM+'-01', me=mEnd(ms), L=live().filter(t=>t.due>=ms&&t.due<=me).sort(byDue); let g='', last='';
+  L.forEach(t=>{ if(t.due!==last){ last=t.due; g+=`<h2 style="margin:14px 0 6px;font-size:15px">${fmt(t.due)}（週${'一二三四五六日'[dow(t.due)]}）${t.due===today()?' ・今天':''}</h2>`; } g+=taskRow(t); });
+  $('#app').innerHTML=`<h1>工作行事曆</h1>${calSeg()}<div class="card"><div class="row" style="margin-bottom:6px"><button onclick="calMove(-1)">← 上個月</button><b style="font-size:17px">${y} 年 ${m} 月・依期限排序</b><button onclick="calMove(1)">下個月 →</button><button onclick="calM=today().slice(0,7);rCal()">回到本月</button><span class="spacer"></span><span class="small muted">共 ${L.length} 項</span></div>${g||'<div class="empty">這個月沒有工作</div>'}</div>`;
 }
 function calMove(n){const [y,m]=calM.split('-').map(Number);const d=new Date(y,m-1+n,1);calM=d.getFullYear()+'-'+p2(d.getMonth()+1);rCal();}
 
