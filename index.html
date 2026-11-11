@@ -30,7 +30,26 @@ aside .ic{width:26px;height:26px;border-radius:8px;background:#efe6d5;display:in
 aside button.on .ic{background:var(--gold)}
 aside .nm2{flex:1}
 aside .cnt{background:var(--red);color:#fff;border-radius:999px;font-size:12px;padding:0 7px;font-weight:700}
-aside .sfoot{margin-top:10px;padding:8px 10px 2px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted);line-height:1.6}
+aside .sbrand,aside .sfoot{display:none}
+aside .sp{flex:1}
+@media(min-width:900px){
+  header.topbar{display:none}
+  body{padding-left:248px}
+  .layout{display:block;max-width:1440px;padding:20px 22px}
+  aside{position:fixed;left:0;top:0;bottom:0;width:248px;z-index:20;overflow:auto;background:#1a2a44;border:0;border-radius:0;padding:18px 14px;gap:3px}
+  aside .sbrand{display:flex;align-items:center;gap:12px;padding:6px 8px 18px}
+  aside .sbrand img{width:44px;height:44px;border-radius:50%;box-shadow:0 0 0 1px rgba(184,149,90,.6)}
+  aside .sbn{font:400 28px/1 "Pinyon Script",Georgia,serif;color:#e2c891}
+  aside .sbs{font-size:10.5px;letter-spacing:.16em;color:#9fb0cf;margin-top:4px}
+  aside .slab{font-size:11px;letter-spacing:.14em;color:#8796b3;padding:0 10px 8px}
+  aside button{color:#d6deec;padding:11px 12px;white-space:nowrap}
+  aside button:hover{background:rgba(255,255,255,.08);color:#fff}
+  aside button.on,aside button.on:hover{background:#2c4166;color:#fff}
+  aside .ic{background:rgba(255,255,255,.1)}
+  aside button.on .ic{background:var(--gold)}
+  aside .sfoot{display:block;border-top:1px solid rgba(255,255,255,.12);margin-top:12px;padding:12px 10px 4px;font-size:12px;line-height:1.7;color:#9fb0cf}
+  aside .sfoot b{color:#d6deec;font-weight:600;letter-spacing:.04em}
+}
 main{padding:0 0 96px;width:100%}
 h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:0 0 10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 2px rgba(22,33,58,.06)}
@@ -130,9 +149,9 @@ td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:now
 .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 20px;border-radius:999px;z-index:99;font-weight:700;max-width:92vw;text-align:center}
 .notice{border-radius:10px;padding:9px 12px;font-size:14px;margin:8px 0;background:var(--amber-s);color:#6b3a07}
 table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}th{color:var(--muted)}
-@media(max-width:860px){
+@media(max-width:899px){
  aside{position:static;flex-direction:row;overflow-x:auto;padding:6px;gap:4px}
- aside .slab,aside .sfoot{display:none}
+ aside .slab,aside .sfoot,aside .sbrand,aside .sp{display:none}
  aside button{width:auto;white-space:nowrap;padding:8px 10px}
  main{padding:0 0 96px}
  .savebar{left:0;padding:10px 12px}
@@ -145,6 +164,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
  .wk{grid-template-columns:1fr;gap:6px}.wk .wd{min-height:0;display:grid;grid-template-columns:64px 1fr;gap:4px 10px;align-items:start}.wk .wh{flex-direction:column;justify-content:flex-start;margin:0}.wk .wt{font-size:13px;margin-top:0;margin-bottom:4px;white-space:normal}.wk .wn{margin-top:2px}
  .seg button{padding:8px 12px}
 }
+@media(min-width:900px){.savebar{left:248px;padding:10px 22px}}
 </style>
 </head>
 <body>
@@ -257,7 +277,8 @@ const PICON={home:'🏠',cal:'📅',list:'📋',stats:'📊',docs:'📎',adhoc:'
 const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['stats','工作統計分析'],['docs','文件及工作紀錄'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
 function side(){
   const od=live().filter(t=>eff(t)==='逾期').length, tn=TASKS.filter(t=>t.deleted).length;
-  $('#side').innerHTML=`<div class="slab">工作台 WORKSPACE</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')"><span class="ic" aria-hidden="true">${PICON[k]}</span><span class="nm2">${n}</span>${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#8a8f99">${tn}</span>`:''}</button>`).join('')+`<div class="sfoot"><b>CASEVORAS QA</b><br>個人工作站・本機資料模式</div>`;
+  const lg=(document.querySelector('header .logo')||{}).src||'';
+  $('#side').innerHTML=`<div class="sbrand"><img src="${lg}" alt="Casevoras 標誌" width="44" height="44"><div><div class="sbn">Casevoras</div><div class="sbs">FOOD QUALITY TOOLS</div></div></div><div class="slab">工作台 WORKSPACE</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')"><span class="ic" aria-hidden="true">${PICON[k]}</span><span class="nm2">${n}</span>${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#8a8f99">${tn}</span>`:''}</button>`).join('')+`<span class="sp"></span><div class="sfoot"><b>CASEVORAS QA PLANNER</b><br>個人工作站・本機資料模式</div>`;
 }
 function go(k,after){ const run=()=>{dirty=false;cur=null;view=k;render();window.scrollTo(0,0);if(after)after();}; if(dirty) askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'}); else run(); }
 function render(){ side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,docs:rDocs,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
