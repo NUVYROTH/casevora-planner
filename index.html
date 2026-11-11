@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Casevora-QA Planner｜品研工作行事曆</title>
+<style>
+:root{--navy:#14306b;--navy2:#1e3f8f;--bg:#f1f4f9;--card:#fff;--ink:#1c2740;--muted:#6b7794;--line:#dde3ee;
+ --blue:#2563eb;--blue-s:#e6eeff;--green:#15803d;--green-s:#e3f5ea;--teal:#0f766e;--teal-s:#d9f3ef;--red:#c62828;--red-s:#fde8e8;--amber:#b45309;--amber-s:#fff1d6;--gray-s:#eceff5;--ind:#4338ca;--ind-s:#ebe9ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;font-size:15px;line-height:1.55}
+.layout{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+aside{background:var(--navy);color:#fff;padding:18px 12px;position:sticky;top:0;height:100vh;overflow:auto}
+aside .brand{font-weight:800;font-size:17px;padding:4px 10px 2px}
+aside .sub{font-size:12px;opacity:.75;padding:0 10px 14px}
+aside button{display:block;width:100%;text-align:left;background:transparent;border:0;color:#dbe5ff;padding:10px 12px;border-radius:12px;font:inherit;cursor:pointer;margin-bottom:2px}
+aside button:hover{background:rgba(255,255,255,.1)}
+aside button.on{background:#fff;color:var(--navy);font-weight:800}
+aside .cnt{float:right;background:var(--red);color:#fff;border-radius:999px;font-size:12px;padding:0 7px}
+main{padding:20px 22px 96px;max-width:1100px;width:100%}
+h1{font-size:22px;margin:0 0 4px} h2{font-size:17px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:14px;box-shadow:0 1px 3px rgba(20,48,107,.06)}
+button,.btn{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);padding:7px 14px}
+button:hover{background:#f4f7fd}
+button.primary{background:var(--navy2);border-color:var(--navy2);color:#fff;font-weight:700}
+button.primary:hover{background:var(--navy)}
+button.danger{color:var(--red);border-color:#f0b9b9}
+button.sm{padding:3px 10px;font-size:13px}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],input[type=date],input[type=number],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fff;color:inherit}
+textarea{min-height:70px;resize:vertical}
+input:focus,select:focus,textarea:focus{outline:2px solid #9db8f5;border-color:var(--blue)}
+label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;font-weight:700}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.spacer{flex:1}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px 14px}
+.muted{color:var(--muted)}.small{font-size:13px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left}
+.stat .n{font-size:24px;font-weight:800;line-height:1.2}.stat .l{font-size:13px;color:var(--muted);font-weight:700}
+.stat.red .n{color:var(--red)}.stat.green .n{color:var(--green)}.stat.amber .n{color:var(--amber)}.stat.blue .n{color:var(--blue)}
+.task{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;border:1px solid var(--line);border-left:5px solid var(--blue);margin-bottom:7px;background:#fff;cursor:pointer}
+.task .mid{flex:1;min-width:0}.task .nm{font-weight:700}
+.task .sb{font-size:12px;color:var(--muted)}
+.task.s-逾期{border-left-color:var(--red);background:#fff7f7}
+.task.s-已完成{border-left-color:var(--green);background:var(--green-s)}
+.task.s-待追蹤{border-left-color:var(--amber)}
+.task.s-未開始{border-left-color:#8b97b3}
+.task.next{border-left-color:var(--ind);background:var(--ind-s)}
+.task.next.s-已完成{border-left-color:var(--teal);background:var(--teal-s)}
+.badge{display:inline-block;border-radius:999px;padding:1px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.b-未開始{background:var(--gray-s);color:#44506b}.b-進行中{background:var(--blue-s);color:var(--blue)}.b-待追蹤{background:var(--amber-s);color:var(--amber)}.b-已完成{background:var(--green-s);color:var(--green)}.b-逾期{background:var(--red-s);color:var(--red)}
+.tag{display:inline-block;background:var(--gray-s);color:#44506b;border-radius:6px;padding:0 6px;font-size:12px;margin-right:4px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .h{text-align:center;font-size:13px;color:var(--muted);font-weight:700;padding:4px 0}
+.cal .d{min-height:78px;border:1px solid var(--line);border-radius:10px;padding:3px 4px;background:#fff;cursor:pointer;overflow:hidden}
+.cal .d.out{background:#f7f9fc;color:#a8b1c6}.cal .d.we{background:#f9fafc}
+.cal .d.today{border:2px solid var(--navy2)}.cal .d.sel{outline:2px solid var(--blue)}
+.cal .d .num{font-size:13px;font-weight:700}
+.chip{display:block;font-size:11px;border-radius:5px;padding:0 4px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-未開始{background:var(--gray-s);color:#44506b}.c-進行中{background:var(--blue-s);color:var(--blue)}.c-待追蹤{background:var(--amber-s);color:var(--amber)}.c-已完成{background:var(--green-s);color:var(--green)}.c-逾期{background:var(--red-s);color:var(--red)}
+.empty{text-align:center;padding:20px;color:var(--muted)}
+.modal{position:fixed;inset:0;background:rgba(20,30,60,.5);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal .box{background:#fff;border-radius:16px;padding:18px;max-width:460px;width:100%;max-height:90vh;overflow:auto}
+.savebar{position:fixed;left:230px;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 22px;z-index:5}
+.dirty{color:var(--amber);font-weight:700;font-size:14px}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 20px;border-radius:999px;z-index:99;font-weight:700;max-width:92vw;text-align:center}
+.notice{border-radius:10px;padding:9px 12px;font-size:14px;margin:8px 0;background:var(--amber-s);color:#6b3a07}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left}th{color:var(--muted)}
+@media(max-width:860px){
+ .layout{grid-template-columns:1fr}
+ aside{position:static;height:auto;display:flex;gap:4px;overflow-x:auto;padding:10px}
+ aside .brand,aside .sub{display:none}
+ aside button{width:auto;white-space:nowrap;margin:0;padding:8px 12px}
+ main{padding:14px 12px 96px}
+ .savebar{left:0;padding:10px 12px}
+ .cal .d{min-height:56px}.chip{font-size:10px}
+}
+</style>
+</head>
+<body>
+<div class="layout"><aside id="side"></aside><main id="app"></main></div>
+<script>
+const KT='casevoraQAPlanner_v1_tasks', KP='casevoraQAPlanner_v1_tpls';
+const CATS=['日常','法規','HACCP','VACCP','客訴','廠內異常','儀器校正','病媒防治','委外檢驗','稽核','管理審查','供應商','模擬回收','保險','教育訓練','標示','其他'];
+const ADHOC=['客戶客訴案件','廠內異常矯正與處理','新供應商審核','供應商現場評鑑','HACCP文件異動','產品標示及包材修改','客戶佐證文件提供','實際產品回收事件','SOP修訂','主管交辦事項','其他'];
+const STS=['未開始','進行中','待追蹤','已完成'];
+const FREQ={daily:'每日',weekly:'每週',monthly:'每月',quarterly:'每季',semiannual:'每半年',annual:'每年'};
+const EVENTS=[{id:'ev1',label:'收到委外檢驗報告',name:'委外檢驗報告審閱及歸檔',cat:'委外檢驗'},{id:'ev2',label:'取得委外檢驗報告',name:'非追不可 QR Code 資料更新',cat:'委外檢驗'},{id:'ev3',label:'模擬回收完成',name:'模擬回收紀錄彙整及呈簽',cat:'模擬回收'}];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const p2=n=>String(n).padStart(2,'0');
+function today(){const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
+function pd(s){const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);}
+function fd(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate());}
+function addDays(s,n){const d=pd(s);d.setDate(d.getDate()+n);return fd(d);}
+function dim(y,m){return new Date(y,m,0).getDate();}
+function ymd(y,m,d){return `${y}-${p2(m)}-${p2(Math.min(d,dim(y,m)))}`;}
+function dow(s){return (pd(s).getDay()+6)%7;} // Mon=0
+function wkStart(s){return addDays(s,-dow(s));}
+function mStart(s){return s.slice(0,7)+'-01';}
+function mEnd(s){const [y,m]=s.split('-').map(Number);return ymd(y,m,31);}
+function nextMonth(s){const [y,m]=s.split('-').map(Number);return m===12?`${y+1}-01-01`:`${y}-${p2(m+1)}-01`;}
+function validD(s){return /^\d{4}-\d{2}-\d{2}$/.test(s||'')&&fd(pd(s))===s;}
+function fmt(s){if(!s)return '—';const [y,m,d]=s.split('-');return `${y}/${+m}/${+d}`;}
+function md(s){const [,m,d]=s.split('-');return `${+m}/${+d}`;}
+function newId(){return 'k'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function flash(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2400);}
+function showMsg(msg){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="box"><div style="font-weight:700;white-space:pre-line;margin-bottom:14px">${esc(msg)}</div><div class="row" style="justify-content:flex-end"><button class="primary" id="msgOk">知道了</button></div></div>`;document.body.appendChild(m);m.querySelector('#msgOk').onclick=()=>m.remove();m.querySelector('#msgOk').focus();}
+function askYN(msg,yes,o){o=o||{};const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="box"><div style="font-weight:700;white-space:pre-line;margin-bottom:14px">${esc(msg)}</div><div class="row" style="justify-content:flex-end"><button id="ynNo">${esc(o.no||'取消')}</button><button id="ynYes" class="${o.danger?'danger':'primary'}">${esc(o.yes||'確定')}</button></div></div>`;document.body.appendChild(m);m.querySelector('#ynNo').onclick=()=>m.remove();m.querySelector('#ynYes').onclick=()=>{m.remove();yes();};m.querySelector('#ynNo').focus();}
+function download(c,n,t){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:t}));a.download=n;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},500);}
+
+/* ---------- 初始定期工作（依你的文件） ---------- */
+function seedTpls(){
+  const s=mStart(today()), L=[];
+  const add=(name,cat,freq,rule,extra)=>L.push(Object.assign({id:'t'+p2(L.length+1),name,category:cat,freq,rule,sop:'',path:'',desc:'',remind:7,active:true,start:s},extra||{}));
+  ['EasyFlow系統訊息確認','Chat主管群組及工作群組確認','主管交辦事項'].forEach(n=>add(n,'日常','daily',{}));
+  add('客訴及異常案件追蹤','客訴','daily',{});
+  add('更新客訴統計表','客訴','weekly',{weekday:4});
+  add('非追不可申報','法規','monthly',{day:10});
+  [['食品安全法規管理','法規'],['HACCP食安小組會議資料','HACCP'],['VACCP新增原物料評估','VACCP'],['客訴案件彙整','客訴'],['廠內異常案件彙整','廠內異常'],['病媒防治報告審閱及成效檢討','病媒防治']].forEach(([n,c])=>add(n,c,'monthly',{day:15}));
+  [['預約下個月病媒防治','病媒防治'],['病媒防治公告','病媒防治'],['產品標示規範檢視','標示']].forEach(([n,c])=>add(n,c,'monthly',{day:30}));
+  add('內部校正通知及計畫','儀器校正','quarterly',{offset:0,day:30});
+  add('委外檢驗取樣明細','委外檢驗','quarterly',{offset:0,day:30});
+  add('委外檢驗樣品寄送','委外檢驗','quarterly',{offset:1,day:30});
+  add('完成內部校正','儀器校正','quarterly',{offset:2,day:30});
+  add('第一次模擬回收','模擬回收','semiannual',{months:[4],day:30});
+  add('第二次模擬回收','模擬回收','semiannual',{months:[9],day:30});
+  add('非登不可資料確認','法規','annual',{month:7,day:30});
+  add('病媒防治廠商評估','病媒防治','annual',{month:8,day:30});
+  add('管理審查','管理審查','annual',{month:10,day:30});
+  add('產品責任保險資料更新','保險','annual',{month:11,day:1},{desc:'11 月 1 日起開始辦理（期限可自行修改）'});
+  [['供應商品質穩定度統計','供應商'],['下一年度外部校正計畫','儀器校正'],['下一年度委外檢驗計畫及預算','委外檢驗']].forEach(([n,c])=>add(n,c,'annual',{month:12,day:20}));
+  [['下一年度內部稽核計畫','稽核'],['HACCP年度再確認','HACCP'],['VACCP年度脆弱性評估','VACCP'],['食品詐欺預防措施評核','VACCP'],['下一年度食安品質教育訓練主題建議','教育訓練']].forEach(([n,c])=>add(n,c,'annual',{month:12,day:30}));
+  return L;
+}
+let TASKS=load(KT,[]), TPLS=load(KP,null);
+function load(k,def){try{const v=JSON.parse(localStorage.getItem(k));return v===null?def:v;}catch(e){return def;}}
+if(!Array.isArray(TPLS)||!TPLS.length){TPLS=seedTpls();}
+function persist(){try{localStorage.setItem(KT,JSON.stringify(TASKS));localStorage.setItem(KP,JSON.stringify(TPLS));return true;}catch(e){showMsg('儲存失敗！瀏覽器的儲存空間可能已滿。請先「下載備份」再整理資料。');return false;}}
+const live=()=>TASKS.filter(t=>!t.deleted);
+function eff(t){if(t.status==='已完成')return '已完成';return t.due<today()?'逾期':t.status;}
+function ruleText(t){const r=t.rule||{};return {daily:'每個上班日（週一至週五）',weekly:'每週'+'一二三四五六日'[r.weekday??4],monthly:`每月 ${r.day} 日前`,quarterly:`每季第 ${(r.offset||0)+1} 個月 ${r.day} 日前`,semiannual:`每年 ${monthsOf(r).join('、')} 月 ${r.day} 日前`,annual:`每年 ${monthsOf(r).join('、')} 月 ${r.day} 日前`}[t.freq];}
+
+/* ---------- 週期產生 ---------- */
+function monthsOf(r){return Array.isArray(r.months)&&r.months.length?r.months:[r.month];}
+function occ(t,from,to){
+  const out=[], a=from<t.start?t.start:from, r=t.rule||{}; if(a>to) return out;
+  if(t.freq==='daily'||t.freq==='weekly'){ let g=0; for(let d=a;d<=to&&g++<800;d=addDays(d,1)){ const w=dow(d); if(t.freq==='daily'?w<5:w===(r.weekday??4)) out.push(d);} return out; }
+  let [y,m]=a.split('-').map(Number); const [ty,tm]=to.split('-').map(Number); let g=0;
+  while((y<ty||(y===ty&&m<=tm))&&g++<600){
+    let d=null;
+    if(t.freq==='monthly') d=ymd(y,m,r.day);
+    else if(t.freq==='quarterly'){ if(((m-1)%3)===(r.offset||0)) d=ymd(y,m,r.day); }
+    else if(monthsOf(r).includes(m)) d=ymd(y,m,r.day);
+    if(d&&d>=a&&d<=to) out.push(d);
+    m++; if(m>12){m=1;y++;}
+  }
+  return out;
+}
+function mk(t,due){return {id:newId(),tplId:t.id,key:t.id+'|'+due,kind:'regular',name:t.name,category:t.category,freq:FREQ[t.freq],due,origDue:due,status:'未開始',desc:t.desc||'',sop:t.sop||'',path:t.path||'',note:'',doneDate:'',remind:t.remind??7,postpones:[],createdAt:new Date().toISOString()};}
+function runGen(){
+  const td=today(), keys=new Set(TASKS.map(x=>x.key).filter(Boolean)); let n=0;
+  const hs=mStart(td), he=mEnd(nextMonth(td));
+  TPLS.filter(t=>t.active).forEach(t=>{
+    const ds=t.freq==='daily'?occ(t,td,td):occ(t,hs,he);
+    ds.forEach(d=>{const k=t.id+'|'+d; if(!keys.has(k)){keys.add(k);TASKS.push(mk(t,d));n++;}});
+  });
+  if(n) persist(); return n;
+}
+function nextOf(task){
+  const t=TPLS.find(x=>x.id===task.tplId); if(!t||!t.active) return null;
+  const ds=occ(t,addDays(task.due,1),addDays(task.due,800)); return ds[0]?{t,d:ds[0]}:null;
+}
+function completeTask(id){
+  const t=TASKS.find(x=>x.id===id); if(!t||t.status==='已完成') return;
+  t.status='已完成'; t.doneDate=today(); let msg='已完成 ✦';
+  if(t.kind==='regular'&&t.freq!=='每日'){ const nx=nextOf(t); if(nx&&nx.d>=mStart(today())){ const k=nx.t.id+'|'+nx.d; if(!TASKS.some(x=>x.key===k)){ TASKS.push(mk(nx.t,nx.d)); msg='已完成 ✦ 已產生下一期（'+md(nx.d)+'）'; } else msg='已完成 ✦ 下一期（'+md(nx.d)+'）已在清單'; } }
+  persist(); flash(msg);
+}
+function undoComplete(id){const t=TASKS.find(x=>x.id===id); if(!t) return; t.status='進行中'; t.doneDate=''; persist();}
+
+/* ---------- 導覽 ---------- */
+let view='home', cur=null, dirty=false, calM=today().slice(0,7), calSel=today(), lf={q:'',cat:'',st:'',freq:'',range:'month'}, selT=new Set(), prev='home';
+const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
+function side(){
+  const od=live().filter(t=>eff(t)==='逾期').length, tn=TASKS.filter(t=>t.deleted).length;
+  $('#side').innerHTML=`<div class="brand">Casevora-QA Planner</div><div class="sub">品研工作行事曆</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')">${n}${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#6b7794">${tn}</span>`:''}</button>`).join('');
+}
+function go(k,after){ const run=()=>{dirty=false;cur=null;view=k;render();window.scrollTo(0,0);if(after)after();}; if(dirty) askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'}); else run(); }
+function render(){ side(); ({home:rHome,cal:rCal,list:rList,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
+
+/* ---------- 共用元件 ---------- */
+function taskRow(t,o){o=o||{};const s=eff(t);
+  const soon=s!=='已完成'&&s!=='逾期'&&t.due>today()&&t.due<=addDays(today(),t.remind??7);
+  return `<div class="task s-${s} ${o.next?'next':''}" onclick="openTask('${t.id}')"><div class="mid"><div class="nm">${esc(t.name)}</div>
+    <div class="sb"><span class="tag">${esc(t.category)}</span><span class="tag">${esc(t.freq||'單次')}</span>期限 ${md(t.due)}${t.doneDate?`・完成 ${md(t.doneDate)}`:''}${t.postpones&&t.postpones.length?`・延期 ${t.postpones.length} 次`:''}${soon?'・<b style="color:var(--amber)">即將到期</b>':''}</div></div>
+    <span class="badge b-${s}">${s}</span>${s!=='已完成'?`<button class="sm primary" onclick="event.stopPropagation();completeTask('${t.id}');render()">完成</button>`:''}</div>`;}
+function byDue(a,b){return a.due.localeCompare(b.due)||a.name.localeCompare(b.name);}
+
+/* ---------- 工作總覽 ---------- */
+function rHome(){
+  const td=today(), L=live(), ws=wkStart(td), we=addDays(ws,6), ms=mStart(td), me=mEnd(td), nm=nextMonth(td), nms=nm, nme=mEnd(nm);
+  const open=L.filter(t=>t.status!=='已完成');
+  const S={today:open.filter(t=>t.due===td),week:open.filter(t=>t.due>=ws&&t.due<=we),month:open.filter(t=>t.due>=ms&&t.due<=me),done:L.filter(t=>t.status==='已完成'&&t.doneDate>=ms&&t.doneDate<=me),
+   soon:open.filter(t=>t.due>td&&t.due<=addDays(td,t.remind??7)),over:open.filter(t=>t.due<td),follow:open.filter(t=>t.status==='待追蹤')};
+  const st=(k,l,c,f)=>`<div class="stat ${c}" onclick="${f}"><div class="n" id="n_${k}">${S[k].length}</div><div class="l">${l}</div></div>`;
+  const nextAll=L.filter(t=>t.due>=nms&&t.due<=nme).sort(byDue), nOpen=nextAll.filter(t=>t.status!=='已完成'), nDone=nextAll.filter(t=>t.status==='已完成');
+  const mRest=S.month.filter(t=>t.due>td).sort(byDue), over=S.over.sort(byDue);
+  const doneBox=S.done.filter(t=>t.due<=me).sort((a,b)=>b.doneDate.localeCompare(a.doneDate));
+  $('#app').innerHTML=`<h1>工作總覽</h1><div class="muted small" style="margin-bottom:12px">${fmt(td)}（週${'一二三四五六日'[dow(td)]}）｜打開就知道今天該做什麼</div>
+  <div class="stats">${st('today','今日應完成','blue',"setLf({range:'today'})")}${st('week','本週待辦','blue',"setLf({range:'week'})")}${st('month','本月待辦','blue',"setLf({range:'month',st:'未完成'})")}${st('soon','即將到期','amber',"setLf({range:'all',st:'即將到期'})")}${st('over','已逾期','red',"setLf({range:'all',st:'逾期'})")}${st('follow','待追蹤','amber',"setLf({range:'all',st:'待追蹤'})")}${st('done','本月已完成','green',"setLf({range:'month',st:'已完成'})")}</div>
+  <div class="card"><h2>＋ 快速新增工作</h2><div class="row"><input type="text" id="qn" placeholder="工作名稱" style="flex:2;min-width:160px" onkeydown="if(event.key==='Enter')quickAdd()"><input type="date" id="qd" value="${td}" style="flex:1;min-width:140px"><button class="primary" onclick="quickAdd()">新增</button></div></div>
+  ${over.length?`<div class="card" style="border-color:#f0b9b9"><h2 style="color:var(--red)">⚠ 已逾期工作（${over.length}）</h2><div class="muted small" style="margin-bottom:8px">逾期的工作不會自動變成完成，請處理後按「完成」，或「延期」。</div>${over.slice(0,8).map(t=>taskRow(t)).join('')}${over.length>8?`<div class="small"><a href="#" onclick="setLf({range:'all',st:'逾期'});return false">還有 ${over.length-8} 項，看全部逾期 →</a></div>`:''}</div>`:''}
+  <div class="card"><h2>📌 今日工作</h2>${S.today.length?S.today.sort(byDue).map(t=>taskRow(t)).join(''):'<div class="empty">今天沒有未完成的工作 ✓</div>'}
+   <h2 style="margin-top:14px">本月其他待辦（${mRest.length}）</h2>${mRest.length?mRest.map(t=>taskRow(t)).join(''):'<div class="empty">這個月沒有其他待辦</div>'}</div>
+  <div class="card" style="border-color:#c9c4fa"><h2 style="color:var(--ind)">📅 下個月要做的（${fmt(nms).slice(0,7)}）</h2>
+   <div class="muted small" style="margin-bottom:6px">紫色＝還沒做；青綠色＝已經先做完</div>
+   ${nOpen.length?nOpen.map(t=>taskRow(t,{next:true})).join(''):'<div class="empty">下個月目前沒有待辦</div>'}
+   ${nDone.length?`<h2 style="margin-top:12px;color:var(--teal)">已先做完（${nDone.length}）</h2>${nDone.map(t=>taskRow(t,{next:true})).join('')}`:''}</div>
+  <div class="card" style="border-color:#b7e2c6"><h2 style="color:var(--green)">✓ 已完成（本月 ${doneBox.length}）</h2>${doneBox.length?doneBox.slice(0,15).map(t=>taskRow(t)).join(''):'<div class="empty">本月還沒有完成的工作</div>'}${doneBox.length>15?'<div class="small muted">只顯示最近 15 筆，全部請看「工作清單」</div>':''}</div>`;
+}
+function quickAdd(){
+  const n=$('#qn').value.trim(), d=$('#qd').value; if(!n){showMsg('請先填寫：工作名稱');return;} if(!validD(d)){showMsg('請先填寫：預定完成日');return;}
+  TASKS.push({id:newId(),kind:'manual',name:n,category:'其他',freq:'',due:d,origDue:d,status:'未開始',desc:'',sop:'',path:'',note:'',doneDate:'',remind:7,postpones:[],createdAt:new Date().toISOString()});
+  persist(); flash('已新增 ✦'); render();
+}
+function setLf(o){lf=Object.assign({q:'',cat:'',st:'',freq:'',range:'month'},o);go('list');}
+
+/* ---------- 行事曆 ---------- */
+function rCal(){
+  const [y,m]=calM.split('-').map(Number), first=`${y}-${p2(m)}-01`, start=wkStart(first), td=today(); let cells='';
+  for(let i=0;i<42;i++){ const d=addDays(start,i), inM=d.slice(0,7)===calM, ts=live().filter(t=>t.due===d).sort(byDue); const w=dow(d)>=5;
+    cells+=`<div class="d ${inM?'':'out'} ${w?'we':''} ${d===td?'today':''} ${d===calSel?'sel':''}" onclick="calSel='${d}';rCal()"><div class="num">${+d.slice(8)}</div>${ts.slice(0,3).map(t=>`<span class="chip c-${eff(t)}">${esc(t.name)}</span>`).join('')}${ts.length>3?`<span class="small muted">+${ts.length-3}</span>`:''}</div>`; if(i===34&&addDays(start,35).slice(0,7)!==calM) break; }
+  const sel=live().filter(t=>t.due===calSel).sort(byDue);
+  $('#app').innerHTML=`<h1>工作行事曆</h1><div class="card"><div class="row" style="margin-bottom:10px"><button onclick="calMove(-1)">← 上個月</button><b style="font-size:17px">${y} 年 ${m} 月</b><button onclick="calMove(1)">下個月 →</button><button onclick="calM=today().slice(0,7);calSel=today();rCal()">回到今天</button><span class="spacer"></span><span class="small muted">灰＝未開始 藍＝進行中 黃＝待追蹤 綠＝完成 紅＝逾期</span></div>
+  <div class="cal">${['一','二','三','四','五','六','日'].map(x=>`<div class="h">${x}</div>`).join('')}${cells}</div></div>
+  <div class="card"><h2>${fmt(calSel)}（週${'一二三四五六日'[dow(calSel)]}）的工作</h2>${sel.length?sel.map(t=>taskRow(t)).join(''):'<div class="empty">這天沒有工作</div>'}<div class="row" style="margin-top:8px"><button onclick="go('adhoc')">到「不定期工作」新增案件</button></div></div>`;
+}
+function calMove(n){const [y,m]=calM.split('-').map(Number);const d=new Date(y,m-1+n,1);calM=d.getFullYear()+'-'+p2(d.getMonth()+1);rCal();}
+
+/* ---------- 工作清單 ---------- */
+function filtered(){
+  const td=today(), ws=wkStart(td), we=addDays(ws,6), ms=mStart(td), me=mEnd(td), nms=nextMonth(td), nme=mEnd(nms), q=lf.q.trim().toLowerCase();
+  return live().filter(t=>{ const s=eff(t);
+    if(lf.range==='today'&&t.due!==td) return false; if(lf.range==='week'&&!(t.due>=ws&&t.due<=we)) return false;
+    if(lf.range==='month'&&!(t.due>=ms&&t.due<=me)) return false; if(lf.range==='next'&&!(t.due>=nms&&t.due<=nme)) return false;
+    if(lf.cat&&t.category!==lf.cat) return false; if(lf.freq&&t.freq!==lf.freq) return false;
+    if(lf.st==='未完成'&&s==='已完成') return false; if(lf.st==='即將到期'&&!(s!=='已完成'&&s!=='逾期'&&t.due>td&&t.due<=addDays(td,t.remind??7))) return false;
+    if(lf.st&&!['未完成','即將到期'].includes(lf.st)&&s!==lf.st) return false;
+    if(q&&!(t.name+' '+t.category+' '+(t.note||'')+' '+(t.desc||'')).toLowerCase().includes(q)) return false; return true;}).sort(byDue);
+}
+function rList(){
+  const L=filtered(), opt=(a,v)=>a.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('');
+  $('#app').innerHTML=`<h1>工作清單</h1><div class="card"><div class="grid" style="margin-bottom:10px">
+   <div><label class="f">搜尋</label><input type="text" id="lq" value="${esc(lf.q)}" placeholder="工作名稱、分類、備註" oninput="lf.q=this.value;listBody()"></div>
+   <div><label class="f">期間</label><select onchange="lf.range=this.value;rList()">${[['today','今天'],['week','本週'],['month','本月'],['next','下個月'],['all','全部']].map(([k,n])=>`<option value="${k}" ${lf.range===k?'selected':''}>${n}</option>`).join('')}</select></div>
+   <div><label class="f">分類</label><select onchange="lf.cat=this.value;rList()"><option value="">全部</option>${opt(CATS,lf.cat)}</select></div>
+   <div><label class="f">狀態</label><select onchange="lf.st=this.value;rList()"><option value="">全部</option>${opt(['未完成','未開始','進行中','待追蹤','已完成','逾期','即將到期'],lf.st)}</select></div>
+   <div><label class="f">頻率</label><select onchange="lf.freq=this.value;rList()"><option value="">全部</option>${opt(['每日','每週','每月','每季','每半年','每年'],lf.freq)}</select></div></div>
+   <div class="row"><span class="muted small" id="lc">共 ${L.length} 項</span><span class="spacer"></span><button onclick="exportCSV()">匯出 CSV（Excel 可開）</button></div></div><div id="lb">${L.length?L.map(t=>taskRow(t)).join(''):'<div class="card empty">沒有符合條件的工作</div>'}</div>`;
+}
+function listBody(){const L=filtered();$('#lb').innerHTML=L.length?L.map(t=>taskRow(t)).join(''):'<div class="card empty">沒有符合條件的工作</div>';$('#lc').textContent='共 '+L.length+' 項';}
+
+/* ---------- 不定期工作＋事件觸發 ---------- */
+let evSel='ev1', evDate=today();
+function rAdhoc(){
+  const A=live().filter(t=>t.kind==='adhoc'||t.kind==='event'), open=A.filter(t=>t.status!=='已完成').sort(byDue), done=A.filter(t=>t.status==='已完成').sort((a,b)=>b.doneDate.localeCompare(a.doneDate));
+  const ev=EVENTS.find(e=>e.id===evSel);
+  $('#app').innerHTML=`<h1>不定期工作</h1>
+  <div class="card"><h2>＋ 新增案件</h2><div class="grid"><div><label class="f">案件名稱</label><input type="text" id="an" placeholder="例如：○○客訴案件"></div>
+   <div><label class="f">案件類型</label><select id="at">${ADHOC.map(x=>`<option>${x}</option>`).join('')}</select></div>
+   <div><label class="f">期限</label><input type="date" id="ad" value="${addDays(today(),7)}"></div></div>
+   <div style="margin-top:10px"><label class="f">說明</label><textarea id="ax"></textarea></div><div style="margin-top:10px"><button class="primary" onclick="addAdhoc()">新增案件</button></div></div>
+  <div class="card"><h2>📥 已收到報告（系統自動算 15 日內期限）</h2><div class="grid"><div><label class="f">發生了什麼事</label><select onchange="evSel=this.value;rAdhoc()">${EVENTS.map(e=>`<option value="${e.id}" ${e.id===evSel?'selected':''}>${e.label}</option>`).join('')}</select></div>
+   <div><label class="f">收到（完成）日期</label><input type="date" value="${evDate}" onchange="evDate=this.value;rAdhoc()"></div></div>
+   <div class="notice">${validD(evDate)?`將產生工作「${esc(ev.name)}」，期限 <b>${fmt(addDays(evDate,15))}</b>（${fmt(evDate)} ＋ 15 日）`:'請選擇日期'}</div><button class="primary" onclick="addEvent()">產生工作</button></div>
+  <div class="card"><h2>進行中的案件與事件工作（${open.length}）</h2>${open.length?open.map(t=>taskRow(t)).join(''):'<div class="empty">目前沒有進行中的案件</div>'}</div>
+  <div class="card"><h2>已結案（${done.length}）</h2>${done.length?done.map(t=>taskRow(t)).join(''):'<div class="empty">還沒有結案的案件</div>'}</div>`;
+}
+function addAdhoc(){
+  const n=$('#an').value.trim(), d=$('#ad').value; if(!n){showMsg('請先填寫：案件名稱');return;} if(!validD(d)){showMsg('請先填寫：期限');return;}
+  TASKS.push({id:newId(),kind:'adhoc',name:n,category:'其他',caseType:$('#at').value,freq:'不定期',due:d,origDue:d,status:'未開始',desc:$('#ax').value,sop:'',path:'',note:'',doneDate:'',remind:7,postpones:[],createdAt:new Date().toISOString()});
+  persist(); flash('已新增案件 ✦'); rAdhoc(); side();
+}
+function addEvent(){
+  if(!validD(evDate)){showMsg('請選擇收到（完成）日期');return;} const ev=EVENTS.find(e=>e.id===evSel), due=addDays(evDate,15), key='ev|'+ev.id+'|'+evDate;
+  if(TASKS.some(t=>t.key===key&&!t.deleted)){showMsg('這個日期已經有同一件事的工作了，不會重複產生。');return;}
+  TASKS.push({id:newId(),kind:'event',key,name:ev.name,category:ev.cat,freq:'事件觸發',due,origDue:due,status:'未開始',desc:`${ev.label}：${fmt(evDate)}，期限為 15 日內`,sop:'',path:'',note:'',doneDate:'',remind:7,postpones:[],createdAt:new Date().toISOString()});
+  persist(); flash('已產生：期限 '+fmt(due)); rAdhoc(); side();
+}
+
+/* ---------- 單筆工作 ---------- */
+function openTask(id){const t=TASKS.find(x=>x.id===id); if(!t||t.deleted) return; prev=view==='task'?prev:view; cur=JSON.parse(JSON.stringify(t)); dirty=false; view='task'; render(); window.scrollTo(0,0);}
+function rTask(){
+  const t=cur, s=eff(t), done=t.status==='已完成'; side();
+  $('#app').innerHTML=`<div class="row" style="margin-bottom:12px"><button onclick="leaveTask()">← 返回</button><h1 style="margin:0 6px">工作內容</h1><span class="badge b-${s}">${s}</span><span class="spacer"></span>${done?`<button onclick="uncomplete()">改回未完成</button>`:`<button class="primary" onclick="doComplete()">完成</button><button onclick="postponeUI()">延期</button>`}<button onclick="dupTask()">複製</button><button class="danger" onclick="delTask()">刪除</button></div>
+  <div class="card"><div class="grid">
+   <div style="grid-column:1/-1"><label class="f">工作名稱</label><input type="text" value="${esc(t.name)}" oninput="setT('name',this.value)"></div>
+   <div><label class="f">工作分類</label><select onchange="setT('category',this.value)">${[...new Set([...CATS,t.category])].map(c=>`<option ${t.category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   <div><label class="f">工作頻率</label><input type="text" value="${esc(t.freq||'單次')}" disabled></div>
+   <div><label class="f">預定完成日${t.origDue!==t.due?'（已延期）':''}</label><input type="date" value="${esc(t.due)}" oninput="setT('due',this.value)"></div>
+   <div><label class="f">執行狀態</label><select ${done?'disabled':''} onchange="setT('status',this.value)">${['未開始','進行中','待追蹤'].map(x=>`<option ${t.status===x?'selected':''}>${x}</option>`).join('')}${done?'<option selected>已完成</option>':''}</select><div class="small muted">${s==='逾期'?'已超過期限，狀態顯示為「逾期」，不會自動完成':''}</div></div>
+   <div><label class="f">完成日期</label><input type="date" value="${esc(t.doneDate)}" ${done?'':'disabled'} oninput="setT('doneDate',this.value)"></div>
+   <div><label class="f">提前提醒天數</label><input type="number" min="0" max="90" value="${esc(t.remind??7)}" oninput="setT('remind',this.value)"></div>
+   <div><label class="f">SOP 依據</label><input type="text" value="${esc(t.sop)}" oninput="setT('sop',this.value)" placeholder="程序書編號"></div>
+   <div><label class="f">資料存放位置</label><input type="text" value="${esc(t.path)}" oninput="setT('path',this.value)" placeholder="請用假路徑測試，勿貼公司真實伺服器路徑"></div>
+   <div style="grid-column:1/-1"><label class="f">工作說明</label><textarea oninput="setT('desc',this.value)">${esc(t.desc)}</textarea></div>
+   <div style="grid-column:1/-1"><label class="f">備註</label><textarea oninput="setT('note',this.value)">${esc(t.note)}</textarea></div></div></div>
+  <div class="card"><h2>期限紀錄</h2><div class="small">原本期限：<b>${fmt(t.origDue)}</b>　目前期限：<b>${fmt(t.due)}</b>　延期次數：<b>${(t.postpones||[]).length}</b></div>
+   ${(t.postpones||[]).length?`<table style="margin-top:8px"><thead><tr><th>延期日</th><th>原期限</th><th>新期限</th><th>原因</th></tr></thead><tbody>${t.postpones.map(p=>`<tr><td>${fmt(p.at)}</td><td>${fmt(p.from)}</td><td>${fmt(p.to)}</td><td>${esc(p.reason)}</td></tr>`).join('')}</tbody></table>`:''}</div>
+  <div class="savebar"><div class="row"><button class="primary" onclick="saveTask()">儲存</button><button onclick="leaveTask()">返回</button><span id="dm"></span></div></div>`;
+}
+function setT(k,v){cur[k]=v;dirty=true;const d=$('#dm');if(d)d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';}
+function leaveTask(){const run=()=>{dirty=false;cur=null;view=prev;render();window.scrollTo(0,0);};if(dirty)askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'});else run();}
+function validTask(t){ if(!String(t.name).trim()){showMsg('請先填寫：工作名稱');return false;} if(!validD(t.due)){showMsg('請先填寫：預定完成日');return false;} if(t.status==='已完成'&&!validD(t.doneDate)){showMsg('請先填寫：完成日期');return false;} const r=Number(t.remind); if(!(r>=0&&r<=90)){showMsg('提前提醒天數要是 0 到 90');return false;} return true;}
+function saveTask(){
+  const t=cur; if(!validTask(t)) return; const i=TASKS.findIndex(x=>x.id===t.id), old=TASKS[i];
+  const c=Object.assign({},old,{name:t.name.trim(),category:t.category,due:t.due,status:t.status,doneDate:t.status==='已完成'?t.doneDate:'',remind:Number(t.remind),sop:t.sop,path:t.path,desc:t.desc,note:t.note});
+  if(c.due!==old.due&&old.status!=='已完成'&&old.postpones.length===0&&c.origDue===old.due){} // 直接改日期：不算延期（延期請按「延期」）
+  TASKS[i]=c; if(!persist()){TASKS[i]=old;return;} dirty=false; cur=null; view=prev; render(); flash('已儲存 ✦');
+}
+function doComplete(){ if(dirty){ const t=cur; if(!validTask(t)) return; saveTaskSilent(); } const id=cur.id; completeTask(id); dirty=false; cur=null; view=prev; render(); }
+function saveTaskSilent(){const t=cur,i=TASKS.findIndex(x=>x.id===t.id);TASKS[i]=Object.assign({},TASKS[i],{name:t.name.trim(),category:t.category,due:t.due,remind:Number(t.remind),sop:t.sop,path:t.path,desc:t.desc,note:t.note});persist();}
+function uncomplete(){const id=cur.id; askYN('要把這項改回「未完成」嗎？\n完成日期會清除；已經自動產生的下一期不會被刪除。',()=>{undoComplete(id);dirty=false;cur=null;view=prev;render();flash('已改回未完成');},{yes:'改回未完成'});}
+function postponeUI(){
+  const t=cur, m=document.createElement('div'); m.className='modal';
+  m.innerHTML=`<div class="box"><h2>延期</h2><div class="small muted" style="margin-bottom:8px">目前期限：${fmt(t.due)}　原本期限：${fmt(t.origDue)}（會保留）</div><label class="f">新的期限</label><input type="date" id="pn" value="${addDays(t.due,7)}"><label class="f" style="margin-top:8px">延期原因（必填）</label><textarea id="pr"></textarea><div class="row" style="justify-content:flex-end;margin-top:10px"><button id="pc">取消</button><button class="primary" id="pk">確定延期</button></div></div>`;
+  document.body.appendChild(m); m.querySelector('#pc').onclick=()=>m.remove();
+  m.querySelector('#pk').onclick=()=>{ const nd=m.querySelector('#pn').value, r=m.querySelector('#pr').value.trim(); if(!validD(nd)){showMsg('請選擇新的期限');return;} if(nd<=t.due){showMsg('新的期限要比目前期限晚');return;} if(!r){showMsg('請填寫延期原因');return;}
+    const x=TASKS.find(z=>z.id===t.id); x.postpones=(x.postpones||[]).concat([{at:today(),from:x.due,to:nd,reason:r}]); x.due=nd; if(!persist()) return; m.remove(); dirty=false; cur=JSON.parse(JSON.stringify(x)); flash('已延期到 '+fmt(nd)); rTask(); };
+}
+function dupTask(){
+  const t=cur, c=Object.assign({},TASKS.find(x=>x.id===t.id),{id:newId(),kind:'manual',tplId:'',key:'',name:t.name+'（複製）',status:'未開始',doneDate:'',postpones:[],origDue:t.due,createdAt:new Date().toISOString()});
+  TASKS.push(c); persist(); dirty=false; flash('已複製（不會自動產生下一期）'); cur=null; openTaskKeep(c.id);
+}
+function openTaskKeep(id){const t=TASKS.find(x=>x.id===id);cur=JSON.parse(JSON.stringify(t));dirty=false;view='task';render();window.scrollTo(0,0);}
+function delTask(){
+  const id=cur.id; askYN('確定要刪除這項工作嗎？\n刪除後會先放在「最近刪除」30 天，期間可以還原。',()=>{
+    const t=TASKS.find(x=>x.id===id); t.deleted=true; t.deletedAt=today(); if(!persist()){t.deleted=false;delete t.deletedAt;return;} dirty=false;cur=null;view=prev;render();flash('已移到「最近刪除」');},{yes:'刪除',danger:true});
+}
+
+/* ---------- 定期工作設定 ---------- */
+function rTpls(){
+  $('#app').innerHTML=`<div class="row" style="margin-bottom:6px"><h1 style="margin:0">定期工作設定</h1><span class="spacer"></span><button class="primary" onclick="openTpl('')">＋ 新增定期工作</button></div><div class="card"><div class="muted small" style="margin-bottom:8px">這裡是自動產生工作的規則，可以新增、修改、刪除。<br>修改規則只影響<b>之後</b>產生的工作：已經完成、進行中、逾期、延期過的工作都保留不動，只有「還沒開始、期限還沒到」的舊工作會依新規則重新產生。</div>
+  <div style="overflow-x:auto"><table><thead><tr><th>啟用</th><th>工作名稱</th><th>分類</th><th>頻率</th><th>規則</th><th></th></tr></thead><tbody>${TPLS.map(t=>`<tr><td><input type="checkbox" ${t.active?'checked':''} onchange="togTpl('${t.id}',this.checked)"></td><td>${esc(t.name)}</td><td>${esc(t.category)}</td><td>${FREQ[t.freq]}</td><td>${ruleText(t)}</td><td style="white-space:nowrap"><button class="sm" onclick="openTpl('${t.id}')">修改</button> <button class="sm danger" onclick="delTpl('${t.id}')">刪除</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function togTpl(id,v){const t=TPLS.find(x=>x.id===id);t.active=v;persist();if(v){const n=runGen();flash(n?'已啟用，產生 '+n+' 筆':'已啟用');}else flash('已停用');side();}
+let tf=null, tfNew=false;
+function openTpl(id){
+  const t=TPLS.find(x=>x.id===id); tfNew=!t; prev='tpls';
+  tf=t?JSON.parse(JSON.stringify(t)):{id:newId(),name:'',category:'日常',freq:'monthly',rule:{day:15},sop:'',path:'',desc:'',remind:7,active:true,start:today()};
+  tf.rule=tf.rule||{}; if(tf.rule.months===undefined&&tf.rule.month) tf.rule.months=[tf.rule.month];
+  dirty=false; view='tplform'; render(); window.scrollTo(0,0);
+}
+function setTf(k,v){tf[k]=v;dirty=true;const d=$('#dm');if(d)d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';prevTf();}
+function setTfRule(k,v){tf.rule[k]=v;dirty=true;const d=$('#dm');if(d)d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';prevTf();}
+function setTfFreq(f){
+  tf.freq=f; const r=tf.rule||{}; const day=r.day||15;
+  tf.rule=f==='weekly'?{weekday:4}:f==='daily'?{}:f==='monthly'?{day}:f==='quarterly'?{offset:0,day}:{months:[11],day}; dirty=true; rTplForm();
+  const d=$('#dm'); if(d) d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';
+}
+function togMonth(m,on){const a=new Set(tf.rule.months||[]);on?a.add(m):a.delete(m);tf.rule.months=[...a].sort((x,y)=>x-y);dirty=true;const d=$('#dm');if(d)d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';prevTf();}
+function tfCandidate(){const t=tf; return Object.assign({},t,{start:today()});}
+function prevTf(){
+  const el=$('#tfp'); if(!el) return; const v=tplErr(tf);
+  if(v){el.innerHTML='<span class="muted">'+esc(v)+'</span>';return;}
+  const ds=occ(tfCandidate(),today(),addDays(today(),800)).slice(0,4);
+  el.innerHTML=ds.length?'接下來會在這些日子產生：<b>'+ds.map(fmt).join('、')+'</b>'+(tf.freq==='daily'?'（只有上班日，且只產生當天）':''):'接下來 800 天內沒有符合的日子';
+}
+function tplErr(t){
+  if(!String(t.name).trim()) return '請先填寫：工作名稱';
+  const r=t.rule||{}; const day=Number(r.day);
+  if(['monthly','quarterly','semiannual','annual'].includes(t.freq)&&!(Number.isInteger(day)&&day>=1&&day<=31)) return '「日」要是 1 到 31';
+  if(['semiannual','annual'].includes(t.freq)&&!(Array.isArray(r.months)&&r.months.length)) return '請至少勾選一個月份';
+  if(t.freq==='weekly'&&!(r.weekday>=0&&r.weekday<=6)) return '請選擇星期幾';
+  if(t.freq==='quarterly'&&![0,1,2].includes(Number(r.offset))) return '請選擇每季的第幾個月';
+  const rm=Number(t.remind); if(!(rm>=0&&rm<=90)) return '提前提醒天數要是 0 到 90';
+  return '';
+}
+function rTplForm(){
+  const t=tf, r=t.rule||{}; side();
+  const wd='一二三四五六日'.split('').map((n,i)=>`<option value="${i}" ${r.weekday===i?'selected':''}>星期${n}</option>`).join('');
+  const dayOpt=(sel)=>Array.from({length:31},(_,i)=>`<option value="${i+1}" ${sel===i+1?'selected':''}>${i+1} 日</option>`).join('');
+  let rule='';
+  if(t.freq==='daily') rule='<div class="muted small">每個上班日（週一至週五）各產生一筆，只產生當天。</div>';
+  if(t.freq==='weekly') rule=`<div><label class="f">星期幾（期限）</label><select onchange="setTfRule('weekday',+this.value)">${wd}</select></div>`;
+  if(t.freq==='monthly') rule=`<div><label class="f">每月幾日前完成</label><select onchange="setTfRule('day',+this.value)">${dayOpt(r.day)}</select><div class="small muted">遇到沒有這天的月份（例如 30 日遇到 2 月），記在當月最後一天</div></div>`;
+  if(t.freq==='quarterly') rule=`<div><label class="f">每季的第幾個月</label><select onchange="setTfRule('offset',+this.value)">${[0,1,2].map(i=>`<option value="${i}" ${(r.offset||0)===i?'selected':''}>第 ${i+1} 個月（${[1,2,3].map(k=>k+i*1+(k-1)*2).join('、')} 月起）</option>`).join('')}</select><div class="small muted">第 1 個月＝1、4、7、10 月；第 2 個月＝2、5、8、11 月；第 3 個月＝3、6、9、12 月</div></div><div><label class="f">幾日前完成</label><select onchange="setTfRule('day',+this.value)">${dayOpt(r.day)}</select></div>`;
+  if(t.freq==='semiannual'||t.freq==='annual') rule=`<div style="grid-column:1/-1"><label class="f">哪幾個月（可複選）${t.freq==='semiannual'?'　每半年通常選兩個相隔 6 個月的月份，例如 4 月和 10 月':''}</label><div class="row">${Array.from({length:12},(_,i)=>`<label class="row" style="gap:3px"><input type="checkbox" style="width:auto" ${(r.months||[]).includes(i+1)?'checked':''} onchange="togMonth(${i+1},this.checked)">${i+1} 月</label>`).join('')}</div></div><div><label class="f">幾日前完成</label><select onchange="setTfRule('day',+this.value)">${dayOpt(r.day)}</select></div>`;
+  $('#app').innerHTML=`<div class="row" style="margin-bottom:12px"><button onclick="leaveTpl()">← 返回</button><h1 style="margin:0 6px">${tfNew?'新增':'修改'}定期工作</h1></div>
+  <div class="card"><div class="grid"><div style="grid-column:1/-1"><label class="f">工作名稱</label><input type="text" value="${esc(t.name)}" oninput="setTf('name',this.value)" placeholder="例如：每月設備清潔檢查"></div>
+   <div><label class="f">工作分類</label><select onchange="setTf('category',this.value)">${[...new Set([...CATS,t.category])].map(c=>`<option ${t.category===c?'selected':''}>${esc(c)}</option>`).join('')}</select></div>
+   <div><label class="f">頻率</label><select onchange="setTfFreq(this.value)">${Object.entries(FREQ).map(([k,n])=>`<option value="${k}" ${t.freq===k?'selected':''}>${n}</option>`).join('')}</select></div>${rule}
+   <div><label class="f">提前提醒天數</label><input type="number" min="0" max="90" value="${esc(t.remind)}" oninput="setTf('remind',this.value)"></div>
+   <div><label class="f">SOP 依據</label><input type="text" value="${esc(t.sop)}" oninput="setTf('sop',this.value)"></div>
+   <div><label class="f">資料存放位置</label><input type="text" value="${esc(t.path)}" oninput="setTf('path',this.value)" placeholder="請用假路徑測試"></div>
+   <div style="grid-column:1/-1"><label class="f">工作說明</label><textarea oninput="setTf('desc',this.value)">${esc(t.desc)}</textarea></div></div>
+   <div class="notice" id="tfp"></div>${tfNew?'':'<div class="notice">儲存後：還沒開始、期限還沒到的舊工作會依新規則重新產生；已完成、進行中、逾期或延期過的都不會動。</div>'}</div>
+  <div class="savebar"><div class="row"><button class="primary" onclick="saveTpl()">儲存</button><button onclick="leaveTpl()">返回</button><span id="dm"></span></div></div>`;
+  prevTf();
+}
+function leaveTpl(){const run=()=>{dirty=false;tf=null;view='tpls';render();window.scrollTo(0,0);};if(dirty)askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'});else run();}
+function saveTpl(){
+  const e=tplErr(tf); if(e){showMsg(e);return;}
+  const item=Object.assign({},tf,{name:tf.name.trim(),remind:Number(tf.remind),start:today()});
+  if(item.rule.day!==undefined) item.rule.day=Number(item.rule.day);
+  const oldT=TPLS.slice(), oldK=TASKS.slice(); let removed=0;
+  if(tfNew) TPLS.push(item);
+  else{ const i=TPLS.findIndex(x=>x.id===item.id); TPLS[i]=item; const td=today();
+    TASKS=TASKS.filter(x=>{ const un=x.tplId===item.id&&x.kind==='regular'&&!x.deleted&&x.status==='未開始'&&x.due>=td&&!(x.postpones&&x.postpones.length); if(un) removed++; return !un; }); }
+  const made=item.active?runGen():0; if(!persist()){TPLS=oldT;TASKS=oldK;return;}
+  dirty=false; tf=null; view='tpls'; render(); flash(tfNew?`已新增，產生 ${made} 筆工作`:`已儲存：重新產生 ${made} 筆（移除 ${removed} 筆還沒開始的舊工作）`);
+}
+function delTpl(id){
+  const t=TPLS.find(x=>x.id===id); if(!t) return; const n=live().filter(x=>x.tplId===id).length;
+  askYN(`確定要刪除定期工作「${t.name}」嗎？\n以後不會再自動產生；已經產生的 ${n} 項工作和歷史紀錄都會保留。\n（如果只是暫時不要，可以改成「停用」。）`,()=>{const old=TPLS.slice();TPLS=TPLS.filter(x=>x.id!==id);if(!persist()){TPLS=old;return;}render();flash('已刪除定期工作');},{yes:'刪除',danger:true});
+}
+
+/* ---------- 最近刪除 ---------- */
+function trashL(){return TASKS.filter(t=>t.deleted).sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));}
+function daysB(a,b){return Math.round((pd(b)-pd(a))/86400000);}
+function rTrash(){
+  const L=trashL(), n=selT.size;
+  $('#app').innerHTML=`<h1>最近刪除</h1><div class="card"><div class="notice small">已刪除超過 30 天的工作，會在「下次打開本系統時」永久刪除（不是準時自動）。刪除的定期工作，還原前不會被重新產生。</div>
+   <div class="row" style="margin:8px 0"><button onclick="selT=new Set(trashL().map(t=>t.id));rTrash()" ${L.length?'':'disabled'}>全選</button><button onclick="selT=new Set();rTrash()" ${n?'':'disabled'}>全部不選</button><button id="trR" onclick="trashRestore()" ${n?'':'disabled'}>還原</button><button id="trP" class="danger" onclick="trashPerm()" ${n?'':'disabled'}>永久刪除</button><span class="muted small">${n?'已勾選 '+n+' 筆':'請先勾選'}</span></div>
+   ${L.length?L.map(t=>`<div class="task" style="cursor:default"><input type="checkbox" style="width:auto" data-id="${t.id}" ${selT.has(t.id)?'checked':''} onchange="this.checked?selT.add('${t.id}'):selT.delete('${t.id}');rTrash()"><div class="mid"><div class="nm">${esc(t.name)}</div><div class="sb">期限 ${fmt(t.due)}・${fmt(t.deletedAt)} 刪除・剩 ${Math.max(30-daysB(t.deletedAt,today()),0)} 天</div></div></div>`).join(''):'<div class="empty">目前沒有刪除的工作</div>'}</div>`;
+}
+function trashRestore(){const ids=[...selT];if(!ids.length)return;const ch=[];TASKS.forEach(t=>{if(ids.includes(t.id)&&t.deleted){ch.push([t,t.deletedAt]);t.deleted=false;delete t.deletedAt;}});if(!persist()){ch.forEach(([t,d])=>{t.deleted=true;t.deletedAt=d;});return;}selT=new Set();render();flash('已還原 ✦');}
+function trashPerm(){const n=selT.size;if(!n)return;askYN(`確定要永久刪除選取的 ${n} 筆嗎？永久刪除後無法復原。`,()=>{const old=TASKS;TASKS=TASKS.filter(t=>!selT.has(t.id));if(!persist()){TASKS=old;return;}selT=new Set();render();flash('已永久刪除');},{yes:'永久刪除',danger:true});}
+function purge(){const n=TASKS.length;TASKS=TASKS.filter(t=>!(t.deleted&&t.deletedAt&&today()>addDays(t.deletedAt,30)));if(TASKS.length!==n)persist();}
+
+/* ---------- 系統設定：匯出、備份、還原 ---------- */
+function rSys(){
+  $('#app').innerHTML=`<h1>系統設定</h1><div class="card"><h2>📦 資料</h2><div class="row"><button onclick="exportCSV(true)">匯出全部工作 CSV</button><button onclick="backup()">下載備份</button><button onclick="document.getElementById('rf').click()">從備份還原</button><input type="file" id="rf" accept=".json" hidden onchange="restore(this)"></div></div>
+  <div class="card"><h2>資料保存方式與限制（請務必閱讀）</h2><ul class="small"><li><b>本機儲存 · 僅在此裝置此瀏覽器有效 · 可匯出備份。</b>資料存在這台裝置、這個瀏覽器裡，不會上傳，也不會同步。</li>
+   <li>換瀏覽器、換電腦、使用無痕視窗，都看不到原本的資料；清除瀏覽資料會讓工作和歷史紀錄全部消失，且無法復原。</li><li>請定期按「下載備份」，把備份檔放在這台電腦以外的地方。</li>
+   <li>這個版本是<b>原型</b>。請只用<b>假資料與假路徑</b>測試，不要貼公司真實的伺服器路徑、IP 或帳號。</li>
+   <li>定期工作是「打開本系統的那一刻」才會產生，系統沒有伺服器，不能在指定日期自己醒來。每日工作只產生「今天」，沒打開的日子不會補。</li></ul></div>`;
+}
+function csvOf(L){const head=['工作名稱','分類','頻率','預定完成日','原本期限','完成日期','執行狀態','延期次數','SOP依據','資料存放位置','備註'];
+  const rows=L.map(t=>[t.name,t.category,t.freq||'單次',t.due,t.origDue,t.doneDate||'',eff(t),(t.postpones||[]).length,t.sop,t.path,t.note]);
+  return '﻿'+[head,...rows].map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');}
+function exportCSV(all){const L=(all?live():filtered()).slice().sort(byDue); if(!L.length){showMsg('目前沒有工作可匯出。');return;} download(csvOf(L),`qa_planner_${today()}.csv`,'text/csv;charset=utf-8');}
+function backup(){download(JSON.stringify({app:'casevoraQAPlanner',version:1,exportedAt:new Date().toISOString(),tasks:live(),templates:TPLS},null,1),`qa_planner_backup_${today()}.json`,'application/json');}
+function restore(inp){
+  const f=inp.files[0]; inp.value=''; if(!f) return; const fr=new FileReader();
+  fr.onload=()=>{ let d; try{d=JSON.parse(fr.result); if(!d||d.app!=='casevoraQAPlanner'||!Array.isArray(d.tasks)||!Array.isArray(d.templates)) throw 0;}catch(e){showMsg('無法讀取：這不是本工具的備份檔。');return;}
+    const badT=d.tasks.some(t=>!t||!String(t.name||'').trim()||!validD(t.due)||!validD(t.origDue||t.due)||!STS.includes(t.status)||(t.status==='已完成'&&!validD(t.doneDate))||!Array.isArray(t.postpones||[]));
+    const badP=d.templates.some(t=>!t||!t.id||!FREQ[t.freq]||!t.rule||!validD(t.start));
+    if(badT||badP){showMsg('無法還原：備份檔內有格式不正確的'+(badT?'工作':'定期工作設定')+'。');return;}
+    askYN(`備份檔內有 ${d.tasks.length} 項工作。\n還原會「取代」目前瀏覽器中的 ${live().length} 項工作與定期工作設定，目前「最近刪除」裡的 ${trashL().length} 項也會一併被取代，確定嗎？`,()=>{
+      const oT=TASKS,oP=TPLS; TASKS=d.tasks.map(t=>Object.assign({postpones:[],origDue:t.due,remind:7,note:'',desc:'',sop:'',path:'',doneDate:''},t)); TPLS=d.templates;
+      if(!persist()){TASKS=oT;TPLS=oP;return;} runGen(); flash('還原完成 ✦'); go('home');},{yes:'還原並取代',danger:true}); };
+  fr.readAsText(f);
+}
+window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!dirty&&view!=='task'){if(runGen())render();}});
+(function init(){
+  try{localStorage.setItem('__t','1');localStorage.removeItem('__t');}catch(e){showMsg('注意：目前瀏覽器無法保存資料（可能是無痕模式或已封鎖網站資料），關閉後資料會遺失。');}
+  purge(); const n=runGen(); persist(); render(); if(n>0&&TASKS.length===n) showMsg('已依你的設定產生本月與下個月的定期工作（共 '+n+' 筆）。\n過了期限但還沒做的工作會顯示「逾期」，不會自動變成完成。');
+})();
+</script>
+</body>
+</html>
