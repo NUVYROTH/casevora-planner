@@ -209,13 +209,13 @@ function undoComplete(id){const t=TASKS.find(x=>x.id===id); if(!t) return; t.sta
 /* ---------- 導覽 ---------- */
 let calMode='month', calW=wkStart(today());
 let view='home', cur=null, dirty=false, calM=today().slice(0,7), calSel=today(), lf={q:'',cat:'',st:'',freq:'',range:'month'}, selT=new Set(), prev='home';
-const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['stats','工作統計分析'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
+const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['stats','工作統計分析'],['docs','文件及工作紀錄'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
 function side(){
   const od=live().filter(t=>eff(t)==='逾期').length, tn=TASKS.filter(t=>t.deleted).length;
   $('#side').innerHTML=`<div class="brand">Casevora-QA Planner</div><div class="sub">品研工作行事曆</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')">${n}${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#6b7794">${tn}</span>`:''}</button>`).join('');
 }
 function go(k,after){ const run=()=>{dirty=false;cur=null;view=k;render();window.scrollTo(0,0);if(after)after();}; if(dirty) askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'}); else run(); }
-function render(){ side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
+function render(){ side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,docs:rDocs,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
 
 /* ---------- 共用元件 ---------- */
 function taskRow(t,o){o=o||{};const s=eff(t);
@@ -329,6 +329,62 @@ function rStats(){
 function exportStats(){const R=statRows(stY);const rows=[['月份','原定','完成','準時','延遲','未完成','完成率'],...R.map(r=>[`${stY}-${p2(r.m)}`,r.plan,r.done,r.ontime,r.late,r.open,r.rate===null?'':r.rate+'%'])];
   download('﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'),`qa_planner_stats_${stY}.csv`,'text/csv;charset=utf-8');}
 
+/* ---------- 檔案（IndexedDB，只存在這台裝置這個瀏覽器） ---------- */
+const FMAX=20*1024*1024; let _db=null;
+function idb(){ if(_db) return Promise.resolve(_db); return new Promise((ok,no)=>{ if(!window.indexedDB){no(new Error('noidb'));return;} const r=indexedDB.open('casevoraQAPlanner_files',1);
+  r.onupgradeneeded=()=>{const st=r.result.createObjectStore('files',{keyPath:'id'});st.createIndex('taskId','taskId');};
+  r.onsuccess=()=>{_db=r.result;ok(_db);}; r.onerror=()=>no(r.error); }); }
+function fx(mode,fn){return idb().then(db=>new Promise((ok,no)=>{const tx=db.transaction('files',mode),st=tx.objectStore('files');let out;const q=fn(st);if(q)q.onsuccess=()=>{out=q.result;};tx.oncomplete=()=>ok(out);tx.onerror=()=>no(tx.error);tx.onabort=()=>no(tx.error);}));}
+const fAll=()=>fx('readonly',st=>st.getAll()).then(a=>a||[]);
+const fGet=id=>fx('readonly',st=>st.get(id));
+const fPut=o=>fx('readwrite',st=>st.put(o));
+const fDel=id=>fx('readwrite',st=>st.delete(id));
+function fDelTasks(ids){if(!ids.length)return Promise.resolve();return fAll().then(a=>Promise.all(a.filter(f=>ids.includes(f.taskId)).map(f=>fDel(f.id))));}
+function fsize(n){return n<1024?n+' B':n<1048576?(n/1024).toFixed(0)+' KB':(n/1048576).toFixed(1)+' MB';}
+function fMeta(f){const {blob,...m}=f;return m;}
+function idbFail(e){showMsg('檔案功能無法使用：這個瀏覽器不允許儲存檔案（可能是無痕模式或已封鎖網站資料）。\n文字紀錄仍可正常使用。');}
+function storeInfo(el){ if(!el) return; if(!(navigator.storage&&navigator.storage.estimate)){el.textContent='';return;}
+  navigator.storage.estimate().then(e=>{el.textContent=`這個瀏覽器已使用約 ${fsize(e.usage||0)}，可用上限約 ${fsize(e.quota||0)}（由瀏覽器決定）。`;}).catch(()=>{}); }
+function addFiles(taskId,inp){
+  const fs=[...inp.files]; inp.value=''; if(!fs.length) return;
+  const big=fs.filter(f=>f.size>FMAX); if(big.length){showMsg(`以下檔案超過 20 MB，沒有加入：\n${big.map(f=>f.name).join('\n')}\n\n大檔案建議放雲端硬碟，在備註貼連結。`);}
+  const ok=fs.filter(f=>f.size<=FMAX); if(!ok.length) return;
+  if(navigator.storage&&navigator.storage.persist) navigator.storage.persist().catch(()=>{});
+  Promise.all(ok.map(f=>fPut({id:newId(),taskId,name:f.name,type:f.type||'application/octet-stream',size:f.size,addedAt:today(),blob:f})))
+   .then(()=>{flash(`已加入 ${ok.length} 個檔案 ✦`);taskFiles(taskId);}).catch(e=>{ if(e&&e.name==='QuotaExceededError') showMsg('加入失敗：瀏覽器的儲存空間已滿。請先「下載備份」，再刪除不需要的檔案。'); else idbFail(e); });
+}
+function openFile(id,dl){ fGet(id).then(f=>{ if(!f){showMsg('找不到這個檔案，可能已被刪除。');return;} const u=URL.createObjectURL(f.blob);
+  if(dl){const a=document.createElement('a');a.href=u;a.download=f.name;document.body.appendChild(a);a.click();a.remove();} else window.open(u,'_blank','noopener');
+  setTimeout(()=>URL.revokeObjectURL(u),60000); }).catch(idbFail); }
+function delFile(id,name,after){ askYN(`確定要刪除檔案「${name}」嗎？\n檔案刪除後無法復原（不會進入「最近刪除」）。`,()=>{fDel(id).then(()=>{flash('已刪除檔案');after&&after();}).catch(idbFail);},{yes:'刪除檔案',danger:true}); }
+function fileRow(f,o){o=o||{}; const t=o.task;
+  return `<div class="task" style="cursor:default;border-left-color:var(--teal)"><div class="mid"><div class="nm" style="word-break:break-all">📎 ${esc(f.name)}</div><div class="sb">${fsize(f.size)}・${fmt(f.addedAt)} 加入${t?`・<a href="#" onclick="openTask('${t.id}');return false">${esc(t.name)}</a>`:o.showTask?'・（工作已刪除）':''}</div></div>
+   <button class="sm" onclick="openFile('${f.id}')">開啟</button><button class="sm" onclick="openFile('${f.id}',1)">下載</button><button class="sm danger" onclick="delFile('${f.id}',this.dataset.n,${o.after||'null'})" data-n="${esc(f.name)}">刪除</button></div>`;}
+function taskFiles(taskId){ const el=$('#tfiles'); if(!el) return; fAll().then(a=>{ const L=a.filter(f=>f.taskId===taskId).sort((x,y)=>y.addedAt.localeCompare(x.addedAt));
+  el.innerHTML=L.length?L.map(f=>fileRow(f,{after:`()=>taskFiles('${taskId}')`})).join(''):'<div class="empty" style="padding:10px">還沒有附件</div>'; }).catch(()=>{el.innerHTML='<div class="notice small">這個瀏覽器無法儲存檔案（可能是無痕模式）。</div>';}); }
+function addLog(id){ const el=$('#lgx'), v=el.value.trim(); if(!v){showMsg('請先填寫：紀錄內容');return;}
+  const t=TASKS.find(x=>x.id===id); const e={id:newId(),date:today(),text:v}; t.logs=(t.logs||[]).concat([e]); if(!persist()){t.logs.pop();return;}
+  if(cur&&cur.id===id) cur.logs=JSON.parse(JSON.stringify(t.logs)); el.value=''; flash('已新增紀錄 ✦'); drawLogs(id); }
+function delLog(id,lid){ askYN('確定要刪除這則工作紀錄嗎？刪除後無法復原。',()=>{ const t=TASKS.find(x=>x.id===id); const old=t.logs; t.logs=(t.logs||[]).filter(l=>l.id!==lid); if(!persist()){t.logs=old;return;} if(cur&&cur.id===id) cur.logs=JSON.parse(JSON.stringify(t.logs)); flash('已刪除紀錄'); view==='docs'?rDocs():drawLogs(id); },{yes:'刪除',danger:true}); }
+function drawLogs(id){ const el=$('#tlogs'); if(!el) return; const t=TASKS.find(x=>x.id===id), L=(t.logs||[]).slice().reverse();
+  el.innerHTML=L.length?L.map(l=>`<div class="task" style="cursor:default;border-left-color:var(--ind)"><div class="mid"><div style="white-space:pre-wrap;word-break:break-word">${esc(l.text)}</div><div class="sb">${fmt(l.date)}</div></div><button class="sm danger" onclick="delLog('${id}','${l.id}')">刪除</button></div>`).join(''):'<div class="empty" style="padding:10px">還沒有工作紀錄</div>'; }
+let dq='';
+function rDocs(){
+  $('#app').innerHTML=`<h1>文件及工作紀錄</h1><div class="muted small" style="margin-bottom:12px">所有工作的附件與文字紀錄集中在這裡。要新增，請打開該項工作，在下方「附件與工作紀錄」加入。</div>
+  <div class="card"><label class="f">搜尋</label><input type="text" id="dq" value="${esc(dq)}" placeholder="檔名、工作名稱、紀錄內容" oninput="dq=this.value;docsBody()"><div class="small muted" id="dsz" style="margin-top:6px"></div></div><div id="db"><div class="card empty">讀取中…</div></div>`;
+  storeInfo($('#dsz')); docsBody();
+}
+function docsBody(){
+  const q=dq.trim().toLowerCase(), byId=Object.fromEntries(TASKS.map(t=>[t.id,t]));
+  const logs=[]; live().forEach(t=>(t.logs||[]).forEach(l=>logs.push({t,l})));
+  const Lg=logs.filter(({t,l})=>!q||(l.text+' '+t.name).toLowerCase().includes(q)).sort((a,b)=>b.l.date.localeCompare(a.l.date));
+  const logHtml=`<div class="card"><h2>📝 工作紀錄（${Lg.length}）</h2>${Lg.length?Lg.map(({t,l})=>`<div class="task" style="cursor:default;border-left-color:var(--ind)"><div class="mid"><div style="white-space:pre-wrap;word-break:break-word">${esc(l.text)}</div><div class="sb">${fmt(l.date)}・<a href="#" onclick="openTask('${t.id}');return false">${esc(t.name)}</a></div></div><button class="sm danger" onclick="delLog('${t.id}','${l.id}')">刪除</button></div>`).join(''):'<div class="empty">沒有符合的紀錄</div>'}</div>`;
+  fAll().then(a=>{ const F=a.map(fMeta).filter(f=>{const t=byId[f.taskId];return !q||(f.name+' '+(t?t.name:'')).toLowerCase().includes(q);}).sort((x,y)=>y.addedAt.localeCompare(x.addedAt));
+    const tot=a.reduce((n,f)=>n+(f.size||0),0);
+    $('#db').innerHTML=`<div class="card"><h2>📎 附件（${F.length}）<span class="small muted" style="font-weight:400">・全部檔案共 ${fsize(tot)}</span></h2>${F.length?F.map(f=>{const t=byId[f.taskId];return fileRow(f,{task:t&&!t.deleted?t:null,showTask:true,after:'docsBody'});}).join(''):'<div class="empty">沒有符合的檔案</div>'}</div>`+logHtml;
+  }).catch(()=>{ $('#db').innerHTML='<div class="card notice small">這個瀏覽器無法儲存檔案（可能是無痕模式），只顯示文字紀錄。</div>'+logHtml; });
+}
+
 /* ---------- 不定期工作＋事件觸發 ---------- */
 let evSel='ev1', evDate=today();
 function rAdhoc(){
@@ -374,9 +430,13 @@ function rTask(){
    <div><label class="f">資料存放位置</label><input type="text" value="${esc(t.path)}" oninput="setT('path',this.value)" placeholder="請用假路徑測試，勿貼公司真實伺服器路徑"></div>
    <div style="grid-column:1/-1"><label class="f">工作說明</label><textarea oninput="setT('desc',this.value)">${esc(t.desc)}</textarea></div>
    <div style="grid-column:1/-1"><label class="f">備註</label><textarea oninput="setT('note',this.value)">${esc(t.note)}</textarea></div></div></div>
+  <div class="card"><h2>📎 附件與工作紀錄</h2><div class="small muted" style="margin-bottom:8px">附件和紀錄會<b>立即儲存</b>，不用按下方「儲存」。檔案只存在這台裝置、這個瀏覽器（單檔上限 20 MB）。請用假資料測試。</div>
+   <div class="row" style="margin-bottom:8px"><button onclick="document.getElementById('tfin').click()">＋ 加入檔案</button><input type="file" id="tfin" multiple hidden onchange="addFiles('${t.id}',this)"></div><div id="tfiles"><div class="empty" style="padding:10px">讀取中…</div></div>
+   <label class="f" style="margin-top:12px">新增工作紀錄（文字）</label><textarea id="lgx" placeholder="例如：11/18 完成校正，報告編號 TEST-001"></textarea><div class="row" style="margin:6px 0 8px"><button class="primary" onclick="addLog('${t.id}')">新增紀錄</button></div><div id="tlogs"></div></div>
   <div class="card"><h2>期限紀錄</h2><div class="small">原本期限：<b>${fmt(t.origDue)}</b>　目前期限：<b>${fmt(t.due)}</b>　延期次數：<b>${(t.postpones||[]).length}</b></div>
    ${(t.postpones||[]).length?`<table style="margin-top:8px"><thead><tr><th>延期日</th><th>原期限</th><th>新期限</th><th>原因</th></tr></thead><tbody>${t.postpones.map(p=>`<tr><td>${fmt(p.at)}</td><td>${fmt(p.from)}</td><td>${fmt(p.to)}</td><td>${esc(p.reason)}</td></tr>`).join('')}</tbody></table>`:''}</div>
   <div class="savebar"><div class="row"><button class="primary" onclick="saveTask()">儲存</button><button onclick="leaveTask()">返回</button><span id="dm"></span></div></div>`;
+  taskFiles(t.id); drawLogs(t.id);
 }
 function setT(k,v){cur[k]=v;dirty=true;const d=$('#dm');if(d)d.innerHTML='<span class="dirty">● 有尚未儲存的修改</span>';}
 function leaveTask(){const run=()=>{dirty=false;cur=null;view=prev;render();window.scrollTo(0,0);};if(dirty)askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'});else run();}
@@ -494,22 +554,32 @@ function rTrash(){
    ${L.length?L.map(t=>`<div class="task" style="cursor:default"><input type="checkbox" style="width:auto" data-id="${t.id}" ${selT.has(t.id)?'checked':''} onchange="this.checked?selT.add('${t.id}'):selT.delete('${t.id}');rTrash()"><div class="mid"><div class="nm">${esc(t.name)}</div><div class="sb">期限 ${fmt(t.due)}・${fmt(t.deletedAt)} 刪除・剩 ${Math.max(30-daysB(t.deletedAt,today()),0)} 天</div></div></div>`).join(''):'<div class="empty">目前沒有刪除的工作</div>'}</div>`;
 }
 function trashRestore(){const ids=[...selT];if(!ids.length)return;const ch=[];TASKS.forEach(t=>{if(ids.includes(t.id)&&t.deleted){ch.push([t,t.deletedAt]);t.deleted=false;delete t.deletedAt;}});if(!persist()){ch.forEach(([t,d])=>{t.deleted=true;t.deletedAt=d;});return;}selT=new Set();render();flash('已還原 ✦');}
-function trashPerm(){const n=selT.size;if(!n)return;askYN(`確定要永久刪除選取的 ${n} 筆嗎？永久刪除後無法復原。`,()=>{const old=TASKS;TASKS=TASKS.filter(t=>!selT.has(t.id));if(!persist()){TASKS=old;return;}selT=new Set();render();flash('已永久刪除');},{yes:'永久刪除',danger:true});}
-function purge(){const n=TASKS.length;TASKS=TASKS.filter(t=>!(t.deleted&&t.deletedAt&&today()>addDays(t.deletedAt,30)));if(TASKS.length!==n)persist();}
+function trashPerm(){const n=selT.size;if(!n)return;askYN(`確定要永久刪除選取的 ${n} 筆嗎？永久刪除後無法復原。`,()=>{const old=TASKS;const gone=[...selT];TASKS=TASKS.filter(t=>!selT.has(t.id));if(!persist()){TASKS=old;return;}fDelTasks(gone).catch(()=>{});selT=new Set();render();flash('已永久刪除');},{yes:'永久刪除',danger:true});}
+function purge(){const n=TASKS.length;const gone=TASKS.filter(t=>t.deleted&&t.deletedAt&&today()>addDays(t.deletedAt,30)).map(t=>t.id);if(gone.length)fDelTasks(gone).catch(()=>{});TASKS=TASKS.filter(t=>!(t.deleted&&t.deletedAt&&today()>addDays(t.deletedAt,30)));if(TASKS.length!==n)persist();}
 
 /* ---------- 系統設定：匯出、備份、還原 ---------- */
 function rSys(){
   $('#app').innerHTML=`<h1>系統設定</h1><div class="card"><h2>📦 資料</h2><div class="row"><button onclick="exportCSV(true)">匯出全部工作 CSV</button><button onclick="backup()">下載備份</button><button onclick="document.getElementById('rf').click()">從備份還原</button><input type="file" id="rf" accept=".json" hidden onchange="restore(this)"></div></div>
   <div class="card"><h2>資料保存方式與限制（請務必閱讀）</h2><ul class="small"><li><b>本機儲存 · 僅在此裝置此瀏覽器有效 · 可匯出備份。</b>資料存在這台裝置、這個瀏覽器裡，不會上傳，也不會同步。</li>
    <li>換瀏覽器、換電腦、使用無痕視窗，都看不到原本的資料；清除瀏覽資料會讓工作和歷史紀錄全部消失，且無法復原。</li><li>請定期按「下載備份」，把備份檔放在這台電腦以外的地方。</li>
+   <li><b>附件檔案</b>也只存在這台裝置、這個瀏覽器（IndexedDB），不會上傳；清除瀏覽資料時檔案會一起消失。「下載備份」會把檔案一起放進備份檔，所以檔案多時備份檔會比較大。<br><span id="ssz" class="muted"></span></li>
    <li>這個版本是<b>原型</b>。請只用<b>假資料與假路徑</b>測試，不要貼公司真實的伺服器路徑、IP 或帳號。</li>
    <li>定期工作是「打開本系統的那一刻」才會產生，系統沒有伺服器，不能在指定日期自己醒來。每日工作只產生「今天」，沒打開的日子不會補。</li></ul></div>`;
+  storeInfo($('#ssz'));
 }
 function csvOf(L){const head=['工作名稱','分類','頻率','預定完成日','原本期限','完成日期','執行狀態','延期次數','SOP依據','資料存放位置','備註'];
   const rows=L.map(t=>[t.name,t.category,t.freq||'單次',t.due,t.origDue,t.doneDate||'',eff(t),(t.postpones||[]).length,t.sop,t.path,t.note]);
   return '﻿'+[head,...rows].map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');}
 function exportCSV(all){const L=(all?live():filtered()).slice().sort(byDue); if(!L.length){showMsg('目前沒有工作可匯出。');return;} download(csvOf(L),`qa_planner_${today()}.csv`,'text/csv;charset=utf-8');}
-function backup(){download(JSON.stringify({app:'casevoraQAPlanner',version:1,exportedAt:new Date().toISOString(),tasks:live(),templates:TPLS},null,1),`qa_planner_backup_${today()}.json`,'application/json');}
+function b64(blob){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(',')[1]||'');r.onerror=()=>no(r.error);r.readAsDataURL(blob);});}
+function unb64(s,type){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new Blob([u],{type});}
+function backup(){
+  const ids=new Set(live().map(t=>t.id)); flash('正在準備備份…');
+  fAll().catch(()=>[]).then(a=>Promise.all(a.filter(f=>ids.has(f.taskId)).map(f=>b64(f.blob).then(data=>Object.assign(fMeta(f),{data}))))).then(files=>{
+    download(JSON.stringify({app:'casevoraQAPlanner',version:2,exportedAt:new Date().toISOString(),tasks:live(),templates:TPLS,files}),`qa_planner_backup_${today()}.json`,'application/json');
+    if(files.length) setTimeout(()=>showMsg(`備份已下載，裡面包含 ${files.length} 個附件檔案。\n請把備份檔存到這台電腦以外的地方（例如雲端硬碟）。`),300);
+  }).catch(()=>showMsg('備份失敗，請再試一次。'));
+}
 function restore(inp){
   const f=inp.files[0]; inp.value=''; if(!f) return; const fr=new FileReader();
   fr.onload=()=>{ let d; try{d=JSON.parse(fr.result); if(!d||d.app!=='casevoraQAPlanner'||!Array.isArray(d.tasks)||!Array.isArray(d.templates)) throw 0;}catch(e){showMsg('無法讀取：這不是本工具的備份檔。');return;}
@@ -518,7 +588,9 @@ function restore(inp){
     if(badT||badP){showMsg('無法還原：備份檔內有格式不正確的'+(badT?'工作':'定期工作設定')+'。');return;}
     askYN(`備份檔內有 ${d.tasks.length} 項工作。\n還原會「取代」目前瀏覽器中的 ${live().length} 項工作與定期工作設定，目前「最近刪除」裡的 ${trashL().length} 項也會一併被取代，確定嗎？`,()=>{
       const oT=TASKS,oP=TPLS; TASKS=d.tasks.map(t=>Object.assign({postpones:[],origDue:t.due,remind:7,note:'',desc:'',sop:'',path:'',doneDate:''},t)); TPLS=d.templates;
-      if(!persist()){TASKS=oT;TPLS=oP;return;} runGen(); flash('還原完成 ✦'); go('home');},{yes:'還原並取代',danger:true}); };
+      if(!persist()){TASKS=oT;TPLS=oP;return;} runGen();
+      if(Array.isArray(d.files)){ fAll().then(a=>Promise.all(a.map(f=>fDel(f.id)))).then(()=>Promise.all(d.files.filter(f=>f&&f.id&&f.taskId&&typeof f.data==='string').map(f=>fPut({id:f.id,taskId:f.taskId,name:String(f.name||'檔案'),type:f.type||'application/octet-stream',size:f.size||0,addedAt:validD(f.addedAt)?f.addedAt:today(),blob:unb64(f.data,f.type||'application/octet-stream')})))).then(()=>{flash('還原完成 ✦（含 '+d.files.length+' 個檔案）');go('home');}).catch(()=>{showMsg('工作已還原，但附件檔案還原失敗（可能是空間不足或無痕模式）。');go('home');}); }
+      else { flash('還原完成 ✦（這個備份沒有附件，目前的附件保留不動）'); go('home'); }},{yes:'還原並取代',danger:true}); };
   fr.readAsText(f);
 }
 window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue='';}});
