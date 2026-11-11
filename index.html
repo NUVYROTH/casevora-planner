@@ -38,6 +38,16 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;font-w
 .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;cursor:pointer;text-align:left}
 .stat .n{font-size:24px;font-weight:800;line-height:1.2}.stat .l{font-size:13px;color:var(--muted);font-weight:700}
 .stat.red .n{color:var(--red)}.stat.green .n{color:var(--green)}.stat.amber .n{color:var(--amber)}.stat.blue .n{color:var(--blue)}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:10px}
+.kpi .k{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;cursor:pointer;text-align:left;box-shadow:0 1px 3px rgba(20,48,107,.06)}
+.kpi .k:hover{border-color:#9db8f5}
+.kpi .kl{font-size:14px;font-weight:700;color:var(--ink)}
+.kpi .kn{font-size:34px;font-weight:800;line-height:1.15;margin:4px 0 2px;font-variant-numeric:tabular-nums}
+.kpi .ks{font-size:13px;color:var(--muted)}
+.kpi .k.blue .kn{color:var(--blue)}.kpi .k.amber .kn{color:var(--amber)}.kpi .k.red .kn{color:var(--red)}.kpi .k.green .kn{color:var(--green)}
+.kpi .k.red.hot{border-color:#f0b9b9;background:#fff7f7}
+.minis{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-bottom:14px}
+.minis a{color:var(--navy2);font-weight:700;text-decoration:none}
 .task{display:flex;gap:10px;align-items:center;padding:9px 10px;border-radius:12px;border:1px solid var(--line);border-left:5px solid var(--blue);margin-bottom:7px;background:#fff;cursor:pointer}
 .task .mid{flex:1;min-width:0}.task .nm{font-weight:700}
 .task .sb{font-size:12px;color:var(--muted)}
@@ -74,6 +84,7 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{border-bottom:1px
  main{padding:14px 12px 96px}
  .savebar{left:0;padding:10px 12px}
  .cal .d{min-height:56px}.chip{font-size:10px}
+ .kpi{grid-template-columns:repeat(2,1fr);gap:10px}.kpi .kn{font-size:28px}
 }
 </style>
 </head>
@@ -203,12 +214,14 @@ function rHome(){
   const open=L.filter(t=>t.status!=='已完成');
   const S={today:open.filter(t=>t.due===td),week:open.filter(t=>t.due>=ws&&t.due<=we),month:open.filter(t=>t.due>=ms&&t.due<=me),done:L.filter(t=>t.status==='已完成'&&t.doneDate>=ms&&t.doneDate<=me),
    soon:open.filter(t=>t.due>td&&t.due<=addDays(td,t.remind??7)),over:open.filter(t=>t.due<td),follow:open.filter(t=>t.status==='待追蹤')};
-  const st=(k,l,c,f)=>`<div class="stat ${c}" onclick="${f}"><div class="n" id="n_${k}">${S[k].length}</div><div class="l">${l}</div></div>`;
+  const kp=(l,n,sub,c,f)=>`<div class="k ${c}" role="button" tabindex="0" onclick="${f}" onkeydown="if(event.key==='Enter')${f}"><div class="kl">${l}</div><div class="kn">${n}</div><div class="ks">${sub}</div></div>`;
+  const mDue=L.filter(t=>t.due>=ms&&t.due<=me), mDone=mDue.filter(t=>t.status==='已完成').length, rate=mDue.length?Math.round(mDone/mDue.length*100):null;
   const nextAll=L.filter(t=>t.due>=nms&&t.due<=nme).sort(byDue), nOpen=nextAll.filter(t=>t.status!=='已完成'), nDone=nextAll.filter(t=>t.status==='已完成');
   const mRest=S.month.filter(t=>t.due>td).sort(byDue), over=S.over.sort(byDue);
   const doneBox=S.done.filter(t=>t.due<=me).sort((a,b)=>b.doneDate.localeCompare(a.doneDate));
   $('#app').innerHTML=`<h1>工作總覽</h1><div class="muted small" style="margin-bottom:12px">${fmt(td)}（週${'一二三四五六日'[dow(td)]}）｜打開就知道今天該做什麼</div>
-  <div class="stats">${st('today','今日應完成','blue',"setLf({range:'today'})")}${st('week','本週待辦','blue',"setLf({range:'week'})")}${st('month','本月待辦','blue',"setLf({range:'month',st:'未完成'})")}${st('soon','即將到期','amber',"setLf({range:'all',st:'即將到期'})")}${st('over','已逾期','red',"setLf({range:'all',st:'逾期'})")}${st('follow','待追蹤','amber',"setLf({range:'all',st:'待追蹤'})")}${st('done','本月已完成','green',"setLf({range:'month',st:'已完成'})")}</div>
+  <div class="kpi">${kp('今日待辦',S.today.length,'尚未完成工作','blue',"setLf({range:'today',st:'未完成'})")}${kp('即將到期',S.soon.length,'提醒期內（預設 7 天）','amber',"setLf({range:'all',st:'即將到期'})")}${kp('逾期工作',S.over.length,S.over.length?'需要優先處理':'目前沒有逾期 ✓','red'+(S.over.length?' hot':''),"setLf({range:'all',st:'逾期'})")}${kp('本月完成率',rate===null?'—':rate+'%',mDue.length?`本月到期 ${mDone} / ${mDue.length} 項已完成`:'本月沒有到期工作','green',"setLf({range:'month',st:''})")}</div>
+  <div class="minis"><span>本週待辦 <a href="#" onclick="setLf({range:'week',st:'未完成'});return false">${S.week.length}</a></span><span>本月待辦 <a href="#" onclick="setLf({range:'month',st:'未完成'});return false">${S.month.length}</a></span><span>待追蹤 <a href="#" onclick="setLf({range:'all',st:'待追蹤'});return false">${S.follow.length}</a></span><span>本月已完成 <a href="#" onclick="setLf({range:'month',st:'已完成'});return false">${S.done.length}</a></span></div>
   <div class="card"><h2>＋ 快速新增工作</h2><div class="row"><input type="text" id="qn" placeholder="工作名稱" style="flex:2;min-width:160px" onkeydown="if(event.key==='Enter')quickAdd()"><input type="date" id="qd" value="${td}" style="flex:1;min-width:140px"><button class="primary" onclick="quickAdd()">新增</button></div></div>
   ${over.length?`<div class="card" style="border-color:#f0b9b9"><h2 style="color:var(--red)">⚠ 已逾期工作（${over.length}）</h2><div class="muted small" style="margin-bottom:8px">逾期的工作不會自動變成完成，請處理後按「完成」，或「延期」。</div>${over.slice(0,8).map(t=>taskRow(t)).join('')}${over.length>8?`<div class="small"><a href="#" onclick="setLf({range:'all',st:'逾期'});return false">還有 ${over.length-8} 項，看全部逾期 →</a></div>`:''}</div>`:''}
   <div class="card"><h2>📌 今日工作</h2>${S.today.length?S.today.sort(byDue).map(t=>taskRow(t)).join(''):'<div class="empty">今天沒有未完成的工作 ✓</div>'}
