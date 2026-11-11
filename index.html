@@ -77,6 +77,9 @@ label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:3px;font-w
 .wk .wh span{color:var(--muted);font-weight:700}
 .wk .wt{display:block;width:100%;text-align:left;font-size:12px;border-radius:7px;padding:4px 6px;margin-top:4px;border:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer}
 .wk .wn{font-size:12px;color:#a8b1c6;margin-top:6px}
+.bar{height:10px;background:var(--gray-s);border-radius:999px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--green);border-radius:999px}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chip{display:block;font-size:11px;border-radius:5px;padding:0 4px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .c-未開始{background:var(--gray-s);color:#44506b}.c-進行中{background:var(--blue-s);color:var(--blue)}.c-待追蹤{background:var(--amber-s);color:var(--amber)}.c-已完成{background:var(--green-s);color:var(--green)}.c-逾期{background:var(--red-s);color:var(--red)}
 .empty{text-align:center;padding:20px;color:var(--muted)}
@@ -206,13 +209,13 @@ function undoComplete(id){const t=TASKS.find(x=>x.id===id); if(!t) return; t.sta
 /* ---------- 導覽 ---------- */
 let calMode='month', calW=wkStart(today());
 let view='home', cur=null, dirty=false, calM=today().slice(0,7), calSel=today(), lf={q:'',cat:'',st:'',freq:'',range:'month'}, selT=new Set(), prev='home';
-const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
+const PAGES=[['home','工作總覽'],['cal','工作行事曆'],['list','工作清單'],['stats','工作統計分析'],['adhoc','不定期工作'],['tpls','定期工作設定'],['trash','最近刪除'],['sys','系統設定']];
 function side(){
   const od=live().filter(t=>eff(t)==='逾期').length, tn=TASKS.filter(t=>t.deleted).length;
   $('#side').innerHTML=`<div class="brand">Casevora-QA Planner</div><div class="sub">品研工作行事曆</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')">${n}${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#6b7794">${tn}</span>`:''}</button>`).join('');
 }
 function go(k,after){ const run=()=>{dirty=false;cur=null;view=k;render();window.scrollTo(0,0);if(after)after();}; if(dirty) askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'}); else run(); }
-function render(){ side(); ({home:rHome,cal:rCal,list:rList,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
+function render(){ side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
 
 /* ---------- 共用元件 ---------- */
 function taskRow(t,o){o=o||{};const s=eff(t);
@@ -302,6 +305,29 @@ function rList(){
    <div class="row"><span class="muted small" id="lc">共 ${L.length} 項</span><span class="spacer"></span><button onclick="exportCSV()">匯出 CSV（Excel 可開）</button></div></div><div id="lb">${L.length?L.map(t=>taskRow(t)).join(''):'<div class="card empty">沒有符合條件的工作</div>'}</div>`;
 }
 function listBody(){const L=filtered();$('#lb').innerHTML=L.length?L.map(t=>taskRow(t)).join(''):'<div class="card empty">沒有符合條件的工作</div>';$('#lc').textContent='共 '+L.length+' 項';}
+
+/* ---------- 工作統計分析（計畫 vs 實際） ---------- */
+let stY=+today().slice(0,4);
+function statRows(y){
+  const L=live(), td=today(), out=[];
+  for(let m=1;m<=12;m++){ const ms=`${y}-${p2(m)}-01`, me=mEnd(ms), P=L.filter(t=>{const o=t.origDue||t.due;return o>=ms&&o<=me;});
+    const D=P.filter(t=>t.status==='已完成'), late=D.filter(t=>t.doneDate>(t.origDue||t.due)), open=P.filter(t=>t.status!=='已完成');
+    out.push({m,plan:P.length,done:D.length,ontime:D.length-late.length,late:late.length,open:open.length,over:open.filter(t=>t.due<td).length,rate:P.length?Math.round(D.length/P.length*100):null,future:ms>td}); }
+  return out;
+}
+function rStats(){
+  const R=statRows(stY), T=R.reduce((a,r)=>({plan:a.plan+r.plan,done:a.done+r.done,ontime:a.ontime+r.ontime,late:a.late+r.late,open:a.open+r.open}),{plan:0,done:0,ontime:0,late:0,open:0});
+  const DU=live().filter(t=>{const o=t.origDue||t.due;return o.slice(0,4)===String(stY)&&o<=today();}), dd=DU.filter(t=>t.status==='已完成').length, tr=DU.length?Math.round(dd/DU.length*100):null, pct=v=>v===null?'—':v+'%';
+  $('#app').innerHTML=`<h1>工作統計分析</h1><div class="muted small" style="margin-bottom:12px">計畫（原本期限）vs 實際（完成日期）・可用於管理審查</div>
+  <div class="card"><div class="row" style="margin-bottom:10px"><button onclick="stY--;rStats()">← ${stY-1}</button><b style="font-size:17px">${stY} 年</b><button onclick="stY++;rStats()">${stY+1} →</button><span class="spacer"></span><button onclick="exportStats()">匯出統計 CSV</button></div>
+   <div class="kpi"><div class="k blue" style="cursor:default"><div class="kl">原定工作</div><div class="kn">${T.plan}</div><div class="ks">依原本期限計算</div></div><div class="k green" style="cursor:default"><div class="kl">實際完成</div><div class="kn">${T.done}</div><div class="ks">已到期工作完成率 ${pct(tr)}</div></div><div class="k amber" style="cursor:default"><div class="kl">延遲完成</div><div class="kn">${T.late}</div><div class="ks">完成日晚於原本期限</div></div><div class="k red" style="cursor:default"><div class="kl">尚未完成</div><div class="kn">${T.open}</div><div class="ks">含還沒到期的工作</div></div></div>
+   <div style="overflow-x:auto"><table><thead><tr><th>月份</th><th class="num">原定</th><th class="num">完成</th><th class="num">準時</th><th class="num">延遲</th><th class="num">未完成</th><th class="num">完成率</th><th style="width:28%"></th></tr></thead><tbody>
+   ${R.map(r=>`<tr style="${r.future&&!r.plan?'color:#a8b1c6':''}"><td style="white-space:nowrap">${r.m} 月</td><td class="num">${r.plan}</td><td class="num">${r.done}</td><td class="num">${r.ontime}</td><td class="num" style="${r.late?'color:var(--amber);font-weight:700':''}">${r.late}</td><td class="num" style="${r.over?'color:var(--red);font-weight:700':''}">${r.open}${r.over?`（逾期 ${r.over}）`:''}</td><td class="num"><b>${pct(r.rate)}</b></td><td>${r.rate===null?'':`<div class="bar" aria-hidden="true"><i style="width:${r.rate}%"></i></div>`}</td></tr>`).join('')}
+   </tbody></table></div>
+   <div class="notice small">・<b>延遲完成</b>＝完成日期晚於「原本期限」，就算中間按過「延期」也算延遲。<br>・<b>完成率</b>＝該月原定工作中，已完成的比例。<br>・定期工作只會產生到「下個月」，所以更後面的月份還沒有資料是正常的。<br>・刪除的工作不列入統計。</div></div>`;
+}
+function exportStats(){const R=statRows(stY);const rows=[['月份','原定','完成','準時','延遲','未完成','完成率'],...R.map(r=>[`${stY}-${p2(r.m)}`,r.plan,r.done,r.ontime,r.late,r.open,r.rate===null?'':r.rate+'%'])];
+  download('﻿'+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'),`qa_planner_stats_${stY}.csv`,'text/csv;charset=utf-8');}
 
 /* ---------- 不定期工作＋事件觸發 ---------- */
 let evSel='ev1', evDate=today();
