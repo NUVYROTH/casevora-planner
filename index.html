@@ -142,6 +142,8 @@ button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
 #guide summary{cursor:pointer;font-weight:700;font-size:15px}
 .gh{margin:14px 0 6px;font-size:14px;border-left:3px solid var(--gold);padding-left:6px}
 #guide ul,#guide ol{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.8}
+.mo{display:none}
+@media(max-width:899px){.hm{display:none}.mo{display:block}td br.mo{display:inline}td .sm+br.mo+.sm{margin-top:4px}}
 .pfoot{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 0;letter-spacing:.04em}
 @media(max-width:899px){.hc-mode{align-items:flex-start;flex-direction:row;flex-wrap:wrap}.ptitle h1{font-size:24px}.eyebrow{font-size:11px;letter-spacing:.14em}}
 .phead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -309,7 +311,7 @@ function side(){
   $('#side').innerHTML=`<div class="sbrand"><img src="${lg}" alt="Casevoras 標誌" width="44" height="44"><div><div class="sbn">Casevoras</div><div class="sbs">FOOD QUALITY TOOLS</div></div></div><div class="slab">工作台 WORKSPACE</div>`+PAGES.map(([k,n])=>`<button class="${view===k?'on':''}" onclick="go('${k}')"><span class="ic" aria-hidden="true">${PICON[k]}</span><span class="nm2">${n}</span>${k==='home'&&od?`<span class="cnt">${od}</span>`:''}${k==='trash'&&tn?`<span class="cnt" style="background:#8a8f99">${tn}</span>`:''}</button>`).join('')+`<span class="sp"></span><div class="sfoot"><b>CASEVORAS QA PLANNER</b><br>個人工作站・本機資料模式</div>`;
 }
 function go(k,after){ const run=()=>{dirty=false;cur=null;view=k;render();window.scrollTo(0,0);if(after)after();}; if(dirty) askYN('有尚未儲存的修改，確定要離開嗎？',run,{yes:'離開'}); else run(); }
-function render(){ side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,docs:rDocs,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
+function render(){ document.querySelectorAll('.ctip').forEach(x=>x.remove()); side(); ({home:rHome,cal:rCal,list:rList,stats:rStats,docs:rDocs,adhoc:rAdhoc,tpls:rTpls,trash:rTrash,sys:rSys,task:rTask,tplform:rTplForm}[view])(); }
 
 /* ---------- 共用元件 ---------- */
 function taskRow(t,o){o=o||{};const s=eff(t);
@@ -628,9 +630,21 @@ function delTask(){
 }
 
 /* ---------- 定期工作設定 ---------- */
+let selP=new Set();
 function rTpls(){
-  $('#app').innerHTML=`<div class="row" style="margin-bottom:6px"><h1 style="margin:0">定期工作設定</h1><span class="spacer"></span><button class="primary" onclick="openTpl('')">＋ 新增定期工作</button></div><div class="card"><div class="muted small" style="margin-bottom:8px">這裡是自動產生工作的規則，可以新增、修改、刪除。<br>修改規則只影響<b>之後</b>產生的工作：已經完成、進行中、逾期、延期過的工作都保留不動，只有「還沒開始、期限還沒到」的舊工作會依新規則重新產生。</div>
-  <div style="overflow-x:auto"><table><thead><tr><th>啟用</th><th>工作名稱</th><th>分類</th><th>頻率</th><th>規則</th><th></th></tr></thead><tbody>${TPLS.map(t=>`<tr><td><input type="checkbox" ${t.active?'checked':''} onchange="togTpl('${t.id}',this.checked)"></td><td>${esc(t.name)}</td><td>${esc(t.category)}</td><td>${FREQ[t.freq]}</td><td>${ruleText(t)}</td><td style="white-space:nowrap"><button class="sm" onclick="openTpl('${t.id}')">修改</button> <button class="sm danger" onclick="delTpl('${t.id}')">刪除</button></td></tr>`).join('')}</tbody></table></div></div>`;
+  selP=new Set([...selP].filter(id=>TPLS.some(t=>t.id===id))); const n=selP.size, all=TPLS.length&&n===TPLS.length;
+  $('#app').innerHTML=`<div class="row" style="margin-bottom:6px"><h1 style="margin:0">定期工作設定</h1><span class="spacer"></span><button class="primary" onclick="openTpl('')">＋ 新增定期工作</button></div><div class="card"><div class="muted small" style="margin-bottom:8px">這裡是自動產生工作的規則，可以新增、修改、刪除。<br>修改規則只影響<b>之後</b>產生的工作：已經完成、進行中、逾期、延期過的工作都保留不動，只有「還沒開始、期限還沒到」的舊工作會依新規則重新產生。<br><b>停用</b>＝之後不再自動產生，已產生的工作與紀錄都保留；需要時再勾回「啟用」即可。</div>
+  <div class="row" style="margin:6px 0 10px"><button onclick="selP=new Set(TPLS.map(t=>t.id));rTpls()" ${TPLS.length&&!all?'':'disabled'}>全選</button><button onclick="selP=new Set();rTpls()" ${n?'':'disabled'}>全部不選</button><button onclick="bulkTpl(true)" ${n?'':'disabled'}>啟用選取</button><button onclick="bulkTpl(false)" ${n?'':'disabled'}>停用選取</button><button class="danger" onclick="bulkDelTpl()" ${n?'':'disabled'}>刪除選取</button><span class="muted small">${n?'已勾選 '+n+' 項':'請先勾選'}・啟用中 ${TPLS.filter(t=>t.active).length} / ${TPLS.length} 項</span></div>
+  <div style="overflow-x:auto"><table><thead><tr><th style="width:56px;white-space:nowrap"><label class="row" style="gap:4px"><input type="checkbox" style="width:auto" aria-label="全選" ${all?'checked':''} onchange="selP=this.checked?new Set(TPLS.map(t=>t.id)):new Set();rTpls()">選取</label></th><th>啟用</th><th>工作名稱</th><th class="hm">分類</th><th>頻率</th><th class="hm">規則</th><th></th></tr></thead><tbody>${TPLS.map(t=>`<tr style="${t.active?'':'color:#a9a294'}"><td><input type="checkbox" style="width:auto" aria-label="選取 ${esc(t.name)}" ${selP.has(t.id)?'checked':''} onchange="this.checked?selP.add('${t.id}'):selP.delete('${t.id}');rTpls()"></td><td><input type="checkbox" style="width:auto" aria-label="啟用 ${esc(t.name)}" ${t.active?'checked':''} onchange="togTpl('${t.id}',this.checked)"></td><td>${esc(t.name)}${t.active?'':' <span class="badge b-未開始">已停用</span>'}<div class="mo small muted">${esc(t.category)}・${ruleText(t)}</div></td><td class="hm">${esc(t.category)}</td><td style="white-space:nowrap">${FREQ[t.freq]}</td><td class="hm">${ruleText(t)}</td><td style="white-space:nowrap"><button class="sm" onclick="openTpl('${t.id}')">修改</button><br class="mo"> <button class="sm danger" onclick="delTpl('${t.id}')">刪除</button></td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function bulkTpl(on){
+  const L=TPLS.filter(t=>selP.has(t.id)&&t.active!==on); if(!L.length){flash(on?'選取的都已經是啟用':'選取的都已經是停用');return;}
+  const go2=()=>{ const old=L.map(t=>[t,t.active]); L.forEach(t=>t.active=on); if(!persist()){old.forEach(([t,v])=>t.active=v);return;} const made=on?runGen():0; selP=new Set(); render(); flash(on?`已啟用 ${L.length} 項${made?'，產生 '+made+' 筆工作':''}`:`已停用 ${L.length} 項，之後不會再自動產生`); };
+  if(on) go2(); else askYN(`確定要停用選取的 ${L.length} 項定期工作嗎？\n停用後不會再自動產生新工作；已經產生的工作和歷史紀錄都會保留，之後可以再啟用。`,go2,{yes:'停用'});
+}
+function bulkDelTpl(){
+  const L=TPLS.filter(t=>selP.has(t.id)); if(!L.length) return;
+  askYN(`確定要刪除選取的 ${L.length} 項定期工作嗎？\n以後不會再自動產生；已經產生的工作和歷史紀錄都會保留。\n定期工作設定刪除後無法還原，只是暫時不要的話，建議改用「停用選取」。`,()=>{ const old=TPLS.slice(); TPLS=TPLS.filter(t=>!selP.has(t.id)); if(!persist()){TPLS=old;return;} selP=new Set(); render(); flash(`已刪除 ${L.length} 項定期工作`); },{yes:'刪除',danger:true});
 }
 function togTpl(id,v){const t=TPLS.find(x=>x.id===id);t.active=v;persist();if(v){const n=runGen();flash(n?'已啟用，產生 '+n+' 筆':'已啟用');}else flash('已停用');side();}
 let tf=null, tfNew=false;
