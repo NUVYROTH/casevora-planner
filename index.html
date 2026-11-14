@@ -139,7 +139,7 @@ button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
 .fno{font-size:11.5px;font-weight:800;letter-spacing:.12em;color:var(--gold);margin-bottom:6px}
 .fstep b{font-size:14.5px}
 .fstep p{margin:6px 0 0;font-size:12.5px;color:var(--muted);line-height:1.6}
-#guide summary{cursor:pointer;font-weight:700;font-size:15px}
+#guide summary,.pguide summary{cursor:pointer;font-weight:700;font-size:15px}
 .gh{margin:14px 0 6px;font-size:14px;border-left:3px solid var(--gold);padding-left:6px}
 #guide ul,#guide ol{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.8}
 .mo{display:none}
@@ -427,8 +427,79 @@ function guideSteps(){
    `<div class="w"><div class="r" style="margin-bottom:4px"><b style="flex:1">2026 年</b><span class="pn">1</span><span class="btn hl">匯出統計 CSV</span></div><div class="r"><span style="width:26px">10月</span><span class="bar"><i style="display:block;height:100%;width:80%;background:var(--green);border-radius:3px"></i></span><span>80%</span></div><div class="r" style="margin-top:3px"><span style="width:26px">11月</span><span class="bar"><i style="display:block;height:100%;width:25%;background:var(--green);border-radius:3px"></i></span><span>25%</span></div></div>
     <div class="w"><b>⚙️ 系統設定</b><div class="r" style="margin-top:4px"><span class="pn">2</span><span class="btn p hl">下載備份</span><span class="btn">從備份還原</span></div></div>
     `]];
-  return S.map(([t,a,b,ill],i)=>`<div class="gs"><div class="ill" aria-hidden="true">${ill}</div><div class="gt"><b><span class="gn">${i+1}</span>${t}</b><p>${a}</p><p>${b}</p></div></div>`).join('');
+  return gcards(S);
 }
+function gcards(S){ return S.map(([t,a,b,ill],i)=>`<div class="gs"><div class="ill" aria-hidden="true">${ill}</div><div class="gt"><b><span class="gn">${i+1}</span>${t}</b><p>${a}</p>${b?`<p>${b}</p>`:''}</div></div>`).join(''); }
+/* ---------- 各頁「這一頁怎麼用」 ---------- */
+const pgOpen={};
+function PN(n){return `<span class="pn">${n}</span>`;}
+function pgCards(k){
+  const B=(t,c)=>`<span class="btn ${c||''}">${t}</span>`, W=x=>`<div class="w">${x}</div>`, R=(x,st)=>`<div class="r"${st?` style="${st}"`:''}>${x}</div>`, field=(w)=>`<span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)${w?';flex:none;width:'+w:''}"></span>`;
+  const bd=(t,bg,c)=>`<span class="bdg" style="background:var(${bg});color:var(${c})">${t}</span>`;
+  const sel=t=>`<span class="btn">${t} ▾</span>`;
+  const M={
+  cal:[
+   ['切換三種檢視','上方可切換「月檢視／週檢視／清單檢視」'+PN(1)+'，預設是月檢視。','週檢視：電腦一週七欄、手機一天一列；清單檢視：整個月依期限排序。',
+    R(PN(1)+`<span class="sg hl"><span class="on">月檢視</span><span>週檢視</span><span>清單檢視</span></span>`)+`<div class="mcal" style="margin-top:6px">${Array.from({length:14},(_,i)=>`<span>${i+3}</span>`).join('')}</div>`],
+   ['點日期看當天工作','月檢視點任一個日期'+PN(1)+'，下方會列出那天的工作，點工作可以打開內容。','格子裡的顏色：灰＝未開始、藍＝進行中、黃＝待追蹤、綠＝完成、紅＝逾期。',
+    `<div class="mcal">${Array.from({length:7},(_,i)=>`<span class="${i===3?'hl':''}" style="${i===3?'background:var(--card);font-weight:700':''}">${i+10}</span>`).join('')}</div>`+R(PN(1)+'<span class="muted">點 13 日</span>','margin-top:6px')+W(`<b>11/13（週五）的工作</b>`+R(`<span style="flex:1">更新客訴統計表</span>`+bd('未開始','--gray-s','--muted')))],
+   ['換月份、換週','「← 上個月／下個月 →」換月份'+PN(1)+'；週檢視用「← 上一週／下一週 →」。','迷路時按「回到今天」或「回到本週」'+PN(2)+'。',
+    R(B('← 上個月','hl')+PN(1)+`<b>2026 年 11 月</b>`+B('下個月 →'))+R(PN(2)+B('回到今天','hl'),'margin-top:8px')]],
+  list:[
+   ['篩選與搜尋','用「期間／分類／狀態／頻率」下拉選單'+PN(1)+'篩出想看的工作，例如期間選「全部」＋狀態選「逾期」。','搜尋框'+PN(2)+'可以找工作名稱、分類、備註。',
+    R(PN(1)+`<span class="btn hl">本月 ▾</span>`+sel('分類')+sel('狀態'))+R(PN(2)+`<span class="bar hl" style="height:14px;background:var(--bg)"></span>`,'margin-top:8px')],
+   ['處理工作','每一列右邊可以直接按「完成」'+PN(1)+'；點工作名稱進入內容頁，可延期、加附件、寫紀錄。','首頁數字卡（例如「逾期」）點下去，也會帶到這一頁並自動篩好。',
+    W(R(`<span style="flex:1;white-space:nowrap"><b>非追不可申報</b></span>`+bd('逾期','--red-s','--red')+PN(1)+B('完成','p hl'))+R(`<span style="flex:1;white-space:nowrap">HACCP 會議</span>`+bd('未開始','--gray-s','--muted')+B('完成','p'),'margin-top:4px'))],
+   ['匯出 Excel','按「匯出 CSV（Excel 可開）」'+PN(1)+'，會匯出<b>目前篩選出來</b>的工作。','要全部工作請到「⚙️ 系統設定」按「匯出全部工作 CSV」。',
+    R(`<span class="muted" style="flex:1">共 12 項</span>`+PN(1)+B('匯出 CSV（Excel 可開）','hl'))+W(R('<span class="muted">📄 qa_planner_2026-11-14.csv</span>'))]],
+  stats:[
+   ['選年份','按「← 2025／2027 →」'+PN(1)+'切換年份，上方 4 張卡是整年的原定、完成、延遲、未完成。','',
+    R(PN(1)+B('← 2025','hl')+'<b>2026 年</b>'+B('2027 →'))+`<div class="k4" style="margin-top:6px"><div>原定<b>43</b></div><div>完成<b style="color:var(--green)">5</b></div><div>延遲<b style="color:var(--amber)">1</b></div><div>未完成<b style="color:var(--red)">38</b></div></div>`],
+   ['看懂每月表格','每一列是一個月：原定＝原本期限在這個月的工作；<b>延遲</b>'+PN(1)+'＝完成日晚於原本期限（按過延期也算）。','完成率＝該月原定工作中已完成的比例；綠色長條越長越好。',
+    W(R(`<span style="width:30px">月份</span><span style="flex:1">原定</span><span style="flex:1">完成</span><span style="flex:1">延遲</span><span>完成率</span>`,'color:var(--muted)')+R(`<span style="width:30px">11月</span><span style="flex:1">20</span><span style="flex:1">5</span><span style="flex:1">${PN(1)}<b class="hl" style="color:var(--amber);padding:0 3px">1</b></span><b>25%</b>`,'margin-top:4px')+R(`<span class="bar"><i style="display:block;height:100%;width:25%;background:var(--green);border-radius:3px"></i></span>`,'margin-top:4px'))],
+   ['管理審查用','按「匯出統計 CSV」'+PN(1)+'，用 Excel 打開就能貼進管理審查報告。','',
+    R(`<b style="flex:1">2026 年</b>`+PN(1)+B('匯出統計 CSV','hl'))+W(R('<span class="muted">📄 qa_planner_stats_2026.csv</span>'))]],
+  docs:[
+   ['搜尋檔案與紀錄','在搜尋框'+PN(1)+'輸入檔名、工作名稱或紀錄內容，下方附件和工作紀錄會一起篩選。','要<b>新增</b>附件或紀錄，請打開該項工作，在「📎 附件與工作紀錄」加入。',
+    W(`<b>搜尋</b>`+R(PN(1)+`<span class="bar hl" style="height:14px;background:var(--bg)"></span>`,'margin-top:4px')+`<div class="muted" style="margin-top:4px">已使用約 2.1 MB</div>`)],
+   ['開啟、下載、刪除','附件右邊「開啟」'+PN(1)+'直接看，「下載」存到電腦，「刪除」會先確認且<b>無法復原</b>。','點附件下方的工作名稱，可以跳回那項工作。',
+    W(`<b>📎 附件（1）</b>`+R(`<span style="flex:1;white-space:nowrap">📎 測試.pdf</span>`+PN(1)+B('開啟','hl')+B('下載')+B('刪除','d'),'margin-top:4px'))+W(`<b>📝 工作紀錄（1）</b><div class="muted" style="margin-top:3px">完成校正，報告編號 TEST-001</div>`)]],
+  adhoc:[
+   ['新增案件','客訴、廠內異常、供應商評鑑等不定期的事：填案件名稱、選類型、設期限，按「新增案件」'+PN(1)+'。','',
+    W(`<b>＋ 新增案件</b>`+R(field()+sel('客戶客訴案件'),'margin-top:4px')+R(PN(1)+B('新增案件','p hl'),'margin-top:4px'))],
+   ['收到報告自動算期限','在「已收到報告」選發生的事和日期，按「產生工作」'+PN(1)+'，系統自動排 15 日內的期限。','同一件事同一天不會重複產生。',
+    W(`<b>📥 已收到報告</b>`+R(sel('收到委外檢驗報告'),'margin-top:4px')+`<div class="muted" style="margin:3px 0">期限：11/14 ＋ 15 日 ＝ 11/29</div>`+R(PN(1)+B('產生工作','p hl')))],
+   ['結案','進行中的案件做完後按「完成」'+PN(1)+'，就會移到「已結案」。','',
+    W(`<b>進行中的案件（1）</b>`+R(`<span style="flex:1;white-space:nowrap">○○客訴案件</span>`+PN(1)+B('完成','p hl'),'margin-top:4px'))+W(`<b style="color:var(--green)">已結案（3）</b>`)]],
+  tpls:[
+   ['新增規則','按「＋ 新增定期工作」'+PN(1)+'，設定名稱、頻率（每日～每年）、幾號前完成、提前幾天提醒，下方會預覽接下來產生的日期。','',
+    R(`<b style="flex:1">定期工作設定</b>`+PN(1)+B('＋ 新增定期工作','p hl'))+W(R(field()+sel('每月'),'')+`<div class="muted" style="margin-top:3px">接下來：11/15、12/15、1/15</div>`)],
+   ['修改或刪除','每一列右邊「修改」'+PN(1)+'；修改只影響<b>之後</b>產生的工作，已完成、進行中、逾期的都不動。','「刪除」會停止自動產生，已經產生的工作和紀錄都保留。',
+    W(R(`<span style="flex:1;white-space:nowrap">客訴統計表</span><span class="muted" style="white-space:nowrap">每週五</span>`+PN(1)+B('修改','hl')+B('刪除','d')))],
+   ['一次停用很多項','勾「選取」或按「全選」，再按「停用選取」'+PN(1)+'，之後就不會再自動產生。','要恢復：勾選後按「啟用選取」。「啟用」那一欄也可以一項一項切換。',
+    R(B('全選')+B('全部不選')+PN(1)+B('停用選取','hl'))+W(R(`<span class="ck on"></span><span class="ck"></span><span style="flex:1;color:#a9a294">非追不可申報</span><span class="bdg" style="background:var(--gray-s);color:var(--muted)">已停用</span>`))]],
+  trash:[
+   ['還原刪錯的工作','勾選要救回的工作（或「全選」），按「還原」'+PN(1)+'，工作就會回到原本的清單。','每一列會顯示「剩幾天」，超過 30 天會在下次打開時永久刪除。',
+    R(B('全選')+PN(1)+B('還原','hl')+B('永久刪除','d'))+W(R(`<span class="ck on"></span><span style="flex:1;white-space:nowrap">病媒防治預約</span><span class="muted">剩 28 天</span>`))],
+   ['永久刪除','確定不要的工作，勾選後按「永久刪除」'+PN(1)+'，會再確認一次，<b>刪了就救不回來</b>。','附件檔案也會一起刪除。',
+    R(B('全選')+B('還原')+PN(1)+B('永久刪除','d hl'))+W(`<b>確定要永久刪除選取的 1 筆嗎？</b>`+R(B('取消')+B('永久刪除','d'),'justify-content:flex-end;margin-top:4px'))]],
+  sys:[
+   ['每週下載備份','<b>每週一次</b>按「下載備份」'+PN(1)+'，把備份檔存到雲端硬碟或寄到自己信箱。備份會包含工作、紀錄和附件。','',
+    W(`<b>📦 資料</b>`+R(B('匯出全部工作 CSV')+PN(1)+B('下載備份','p hl'),'margin-top:4px'))+W(R('<span class="muted">📄 qa_planner_backup_2026-11-14.json</span>'))],
+   ['從備份還原','換電腦或資料不見時，按「從備份還原」'+PN(1)+'選備份檔，確認後按「還原並取代」。','還原會<b>取代</b>目前瀏覽器裡的所有資料，請先確認選對檔案。',
+    R(PN(1)+B('從備份還原','hl'))+W(`<b>備份檔內有 44 項工作，確定嗎？</b>`+R(B('取消')+B('還原並取代','d'),'justify-content:flex-end;margin-top:4px'))],
+   ['讀一次保存限制','下方「資料保存方式與限制」寫清楚資料只存在這台電腦、這個瀏覽器。','清除瀏覽資料、換瀏覽器、無痕視窗都會看不到資料。',
+    W(`<b>資料保存方式與限制</b><div class="muted" style="margin-top:3px">本機儲存・僅在此裝置此瀏覽器有效・可匯出備份</div>`)]]
+  };
+  return M[k];
+}
+function addPG(k){
+  const app=$('#app'); if(!app||app.querySelector('.pguide')) return; const C=pgCards(k); if(!C) return;
+  const d=document.createElement('details'); d.className='card pguide'; if(pgOpen[k]) d.open=true;
+  d.innerHTML=`<summary>📖 這一頁怎麼用（點這裡收合／展開）</summary><div class="gsteps">${gcards(C)}</div><div class="small" style="margin-top:10px;text-align:right"><a href="#" onclick="openGuide();return false">看完整使用說明 →</a></div>`;
+  d.addEventListener('toggle',()=>{pgOpen[k]=d.open;}); app.appendChild(d);
+}
+[['rCal','cal'],['rWeek','cal'],['rCalList','cal'],['rList','list'],['rStats','stats'],['rDocs','docs'],['rAdhoc','adhoc'],['rTpls','tpls'],['rTrash','trash'],['rSys','sys']].forEach(([fn,k])=>{ const o=window[fn]; window[fn]=function(){ const r=o.apply(this,arguments); addPG(k); return r; }; });
 function openGuide(){ const g=$('#guide'); if(!g){go('home',()=>openGuide());return;} g.open=true; g.scrollIntoView({behavior:'smooth',block:'start'}); if(navigator.storage&&navigator.storage.estimate) navigator.storage.estimate().then(e=>{const el=$('#gsz'); if(el) el.textContent=' 目前已使用約 '+fsize(e.usage||0)+'。';}).catch(()=>{}); }
 function bindTips(){ let tip=null; document.querySelectorAll('[data-tip]').forEach(el=>{
   const show=e=>{ if(!tip){tip=document.createElement('div');tip.className='ctip';document.body.appendChild(tip);} tip.textContent=el.dataset.tip; const r=el.getBoundingClientRect(); tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,r.left+r.width/2-tip.offsetWidth/2))+'px'; tip.style.top=Math.max(8,r.top-tip.offsetHeight-8)+'px'; };
