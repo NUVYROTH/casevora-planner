@@ -144,6 +144,36 @@ button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
 #guide ul,#guide ol{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.8}
 .mo{display:none}
 @media(max-width:899px){.hm{display:none}.mo{display:block}td br.mo{display:inline}td .sm+br.mo+.sm{margin-top:4px}}
+.gsteps{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.gs{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}
+.gs .gt>b{display:block;font-size:15px;margin-bottom:4px}
+.gs .gt .gn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fffdf8;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
+.gs .gt p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.7}
+.gs .gt p+p{margin-top:4px}
+.ill{position:relative;background:#f3ece0;border-radius:10px;padding:10px;min-height:118px;font-size:11px;line-height:1.35;overflow:hidden;user-select:none}
+.ill *{pointer-events:none}
+.ill .w{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.ill .r{display:flex;gap:5px;align-items:center}
+.ill .r+.r,.ill .w+.w{margin-top:5px}
+.ill .btn{display:inline-block;border:1px solid var(--field);border-radius:5px;padding:2px 7px;background:var(--card);white-space:nowrap}
+.ill .btn.p{background:var(--navy);border-color:var(--navy);color:#fffdf8;font-weight:700}
+.ill .btn.d{color:var(--red);border-color:#f0b9b9}
+.ill .bar{height:6px;border-radius:3px;background:#e3d9c6;flex:1}
+.ill .ck{width:10px;height:10px;border:1.5px solid #8a8f99;border-radius:2px;flex:none;background:var(--card)}
+.ill .ck.on{background:var(--navy);border-color:var(--navy)}
+.ill .bdg{display:inline-block;border-radius:999px;padding:0 6px;font-size:10px;font-weight:700;white-space:nowrap}
+.ill .k4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.ill .k4 div{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:5px;padding:3px 5px}
+.ill .k4 b{display:block;font-size:14px;line-height:1.1}
+.ill .hl{outline:2px solid var(--gold);outline-offset:2px;box-shadow:0 0 0 5px rgba(184,149,90,.22)}
+.ill .pn{display:inline-flex;width:15px;height:15px;border-radius:50%;background:var(--gold);color:#16213a;font-weight:800;font-size:10px;align-items:center;justify-content:center;flex:none;margin-right:2px;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.gt .pn{display:inline-flex;width:17px;height:17px;border-radius:50%;background:var(--gold);color:#16213a;font-weight:800;font-size:11px;align-items:center;justify-content:center;vertical-align:1px;margin:0 2px}
+.ill .pin{position:absolute;width:18px;height:18px;border-radius:50%;background:var(--gold);color:#16213a;font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.25);z-index:2}
+.ill .sg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--card)}
+.ill .sg span{padding:1px 7px}.ill .sg span.on{background:var(--navy);color:#fffdf8;font-weight:700}
+.ill .mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
+.ill .mcal span{background:var(--card);border-radius:3px;padding:2px 0;font-size:9.5px}
+@media(max-width:899px){.gs{grid-template-columns:1fr}}
 .pfoot{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 0;letter-spacing:.04em}
 @media(max-width:899px){.hc-mode{align-items:flex-start;flex-direction:row;flex-wrap:wrap}.ptitle h1{font-size:24px}.eyebrow{font-size:11px;letter-spacing:.14em}}
 .phead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -355,12 +385,7 @@ function rHome(){
     <li>附件存在瀏覽器的大容量儲存空間（IndexedDB），一樣<b>只在這台電腦、這個瀏覽器</b>，單檔上限 20 MB。<span id="gsz"></span></li>
     <li>無法多人共用同一份資料。請只用<b>假資料</b>測試，不要放真實客訴客人的姓名、電話。</li></ul>
    <div class="gh">操作步驟</div>
-   <ol><li>到「定期工作設定」確認或新增定期工作規則（頻率、日期、提醒天數）。</li>
-    <li>每天打開「工作總覽」，從待處理工作表點進工作，或直接按「完成」。</li>
-    <li>在工作內容頁加入附件、寫工作紀錄；需要延期時按「延期」並填寫原因（原本期限會保留）。</li>
-    <li>不定期案件（客訴、異常、供應商評鑑等）到「不定期工作」新增；收到委外檢驗報告可自動產生 15 日內期限的工作。</li>
-    <li>「工作行事曆」可切換月／週／清單檢視；「文件及工作紀錄」可集中搜尋所有附件與紀錄。</li>
-    <li>「工作統計分析」看計畫 vs 實際與每月完成率，可匯出 CSV；「系統設定」可下載備份、從備份還原。</li></ol></details>
+   <div class="gsteps">${guideSteps()}</div></details>
   <div class="pfoot">CASEVORAS QA PLANNER ・ 個人工作站 ・ 本機資料模式</div>`;
   fAll().then(a=>{const c={};a.forEach(f=>c[f.taskId]=(c[f.taskId]||0)+1);document.querySelectorAll('[data-fc]').forEach(el=>{const n=c[el.dataset.fc];el.textContent=n?'📎 '+n:'—';});}).catch(()=>{});
   bindTips();
@@ -369,6 +394,40 @@ function quickDel(id){ const t=TASKS.find(x=>x.id===id); if(!t) return;
   askYN(`確定要刪除「${t.name}」嗎？\n會先移到「最近刪除」，30 天內可以還原；超過 30 天會永久刪除。`,()=>{ t.deleted=true; t.deletedAt=today(); if(!persist()){t.deleted=false;delete t.deletedAt;return;} render(); flash('已移到「最近刪除」'); },{yes:'刪除',danger:true}); }
 function quickUndo(id){ const t=TASKS.find(x=>x.id===id); if(!t) return;
   askYN(`要把「${t.name}」改回未完成嗎？\n完成日期會清除；已經自動產生的下一期不會被刪除。`,()=>{ undoComplete(id); render(); flash('已改回未完成'); },{yes:'改回未完成'}); }
+function guideSteps(){
+  const st='<span class="bdg" style="background:var(--gray-s);color:#44506b">未開始</span>', od='<span class="bdg" style="background:var(--red-s);color:var(--red)">逾期</span>';
+  const S=[
+  ['設定定期工作','在選單點「🔁 定期工作設定」。按右上角「＋ 新增定期工作」<span class="pn">1</span>建立規則（頻率、幾號前完成、提前幾天提醒），系統會自動產生本月與下個月的工作。','暫時不用的規則，用「選取」勾起來按「停用選取」<span class="pn">2</span>；之後要恢復再「啟用選取」。',
+   `<div class="r" style="justify-content:space-between;margin-bottom:6px"><b>定期工作設定</b><span class="pn">1</span><span class="btn p hl">＋ 新增定期工作</span></div>
+    <div class="w"><div class="r"><span class="ck"></span><span class="ck on"></span><span style="flex:1">更新客訴統計表</span><span class="muted">每週五</span></div><div class="r" style="margin-top:4px"><span class="ck"></span><span class="ck on"></span><span style="flex:1">非追不可申報</span><span class="muted">每月 10 日前</span></div></div>
+    <div class="r" style="margin-top:6px"><span class="btn">全選</span><span class="pn">2</span><span class="btn hl">停用選取</span></div>
+    `],
+  ['每天看工作總覽','打開「🏠 工作總覽」，上面 4 張卡看今日待辦、即將到期、逾期與本月完成率。','下面的「待處理工作」逾期的排最前面，做完直接按「完成」<span class="pn">1</span>；本來就不用做的按「刪除」（30 天內可在「最近刪除」還原）。',
+   `<div class="k4"><div>今日<b>4</b></div><div>到期<b style="color:var(--amber)">7</b></div><div style="border-left-color:var(--red)">逾期<b style="color:var(--red)">3</b></div><div>完成率<b style="color:var(--green)">15%</b></div></div>
+    <div class="w" style="margin-top:6px"><div class="r"><span style="flex:1"><b>更新客訴統計表</b></span>${od}<span class="pn">1</span><span class="btn p hl">完成</span><span class="btn d">刪除</span></div><div class="r" style="margin-top:4px"><span style="flex:1">HACCP 會議資料</span>${st}<span class="btn p">完成</span><span class="btn d">刪除</span></div></div>
+    `],
+  ['按錯了怎麼辦','不小心按到「完成」：到首頁下方「✓ 本月已完成」按「改回未完成」<span class="pn">1</span>。','刪錯了：選單「🗑️ 最近刪除」勾選後按「還原」<span class="pn">2</span>（30 天內）。',
+   `<div class="w"><div class="r" style="margin-bottom:4px"><b style="color:var(--green)">✓ 本月已完成</b></div><div class="r"><span style="flex:1">非追不可申報</span><span class="bdg" style="background:var(--amber-s);color:var(--amber)">延遲</span><span class="pn">1</span><span class="btn hl">改回未完成</span><span class="btn d">刪除</span></div></div>
+    <div class="w"><div class="r" style="margin-bottom:4px"><b>🗑️ 最近刪除</b><span class="muted">剩 28 天</span></div><div class="r"><span class="ck on"></span><span style="flex:1">預約下個月病媒防治</span><span class="pn">2</span><span class="btn hl">還原</span></div></div>
+    `],
+  ['執行與紀錄','點任何一項工作進入「工作內容」。按「＋ 加入檔案」<span class="pn">1</span>上傳報告，在「新增工作紀錄」寫下處理情形，<b>附件與紀錄會立即儲存</b>。','來不及做完：按「延期」<span class="pn">2</span>，選新期限並填原因（原本期限會保留，統計仍算延遲）。改了上方欄位記得按下方「儲存」。',
+   `<div class="w"><b>📎 附件與工作紀錄</b><div class="r" style="margin-top:4px"><span class="pn">1</span><span class="btn hl">＋ 加入檔案</span><span class="muted">📎 測試-檢驗報告.pdf</span></div><div class="r" style="margin-top:4px"><span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)"></span><span class="btn p">新增紀錄</span></div></div>
+    <div class="r" style="justify-content:flex-end;margin-top:6px"><span class="btn p">完成</span><span class="pn">2</span><span class="btn hl">延期</span><span class="btn d">刪除</span></div>`],
+  ['不定期案件','選單「📥 不定期工作」：客訴、廠內異常、供應商評鑑等，填案件名稱、類型、期限後按「新增案件」<span class="pn">1</span>。','收到委外檢驗報告：在「已收到報告」選事件和日期，按「產生工作」<span class="pn">2</span>，系統自動算 15 日內期限。',
+   `<div class="w"><b>＋ 新增案件</b><div class="r" style="margin-top:4px"><span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)"></span><span class="btn">客戶客訴案件 ▾</span></div><div class="r" style="margin-top:4px"><span class="pn">1</span><span class="btn p hl">新增案件</span></div></div>
+    <div class="w"><b>📥 已收到報告</b><div class="r" style="margin-top:4px"><span class="btn">收到委外檢驗報告 ▾</span><span class="pn">2</span><span class="btn p hl">產生工作</span></div><div class="muted" style="margin-top:3px">期限：收到日＋15 日</div></div>
+    `],
+  ['行事曆與文件','「📅 工作行事曆」上方可切換「月／週／清單」<span class="pn">1</span>檢視，點日期看當天工作。','「📎 文件及工作紀錄」的搜尋框<span class="pn">2</span>可搜尋檔名、工作名稱或紀錄內容，集中找所有附件。',
+   `<div class="r" style="margin-bottom:6px"><span class="pn">1</span><span class="sg hl"><span class="on">月</span><span>週</span><span>清單</span></span></div>
+    <div class="mcal">${Array.from({length:14},(_,i)=>`<span style="${i===9?'background:var(--navy);color:#fffdf8;font-weight:700':''}">${i+3}</span>`).join('')}</div>
+    <div class="w" style="margin-top:6px"><div class="r"><span>🔍</span><span class="pn">2</span><span class="bar hl" style="height:12px;background:var(--bg)"></span></div></div>
+    `],
+  ['統計與備份（每週做）','「📊 工作統計分析」看每月完成率與延遲件數，按「匯出統計 CSV」<span class="pn">1</span>貼進管理審查報告。','<b>每週一次</b>到「⚙️ 系統設定」按「下載備份」<span class="pn">2</span>，把備份檔存到雲端硬碟；換電腦時用「從備份還原」。',
+   `<div class="w"><div class="r" style="margin-bottom:4px"><b style="flex:1">2026 年</b><span class="pn">1</span><span class="btn hl">匯出統計 CSV</span></div><div class="r"><span style="width:26px">10月</span><span class="bar"><i style="display:block;height:100%;width:80%;background:var(--green);border-radius:3px"></i></span><span>80%</span></div><div class="r" style="margin-top:3px"><span style="width:26px">11月</span><span class="bar"><i style="display:block;height:100%;width:25%;background:var(--green);border-radius:3px"></i></span><span>25%</span></div></div>
+    <div class="w"><b>⚙️ 系統設定</b><div class="r" style="margin-top:4px"><span class="btn">匯出 CSV</span><span class="pn">2</span><span class="btn p hl">下載備份</span><span class="btn">從備份還原</span></div></div>
+    `]];
+  return S.map(([t,a,b,ill],i)=>`<div class="gs"><div class="ill" aria-hidden="true">${ill}</div><div class="gt"><b><span class="gn">${i+1}</span>${t}</b><p>${a}</p><p>${b}</p></div></div>`).join('');
+}
 function openGuide(){ const g=$('#guide'); if(!g){go('home',()=>openGuide());return;} g.open=true; g.scrollIntoView({behavior:'smooth',block:'start'}); if(navigator.storage&&navigator.storage.estimate) navigator.storage.estimate().then(e=>{const el=$('#gsz'); if(el) el.textContent=' 目前已使用約 '+fsize(e.usage||0)+'。';}).catch(()=>{}); }
 function bindTips(){ let tip=null; document.querySelectorAll('[data-tip]').forEach(el=>{
   const show=e=>{ if(!tip){tip=document.createElement('div');tip.className='ctip';document.body.appendChild(tip);} tip.textContent=el.dataset.tip; const r=el.getBoundingClientRect(); tip.style.left=Math.max(8,Math.min(innerWidth-tip.offsetWidth-8,r.left+r.width/2-tip.offsetWidth/2))+'px'; tip.style.top=Math.max(8,r.top-tip.offsetHeight-8)+'px'; };
