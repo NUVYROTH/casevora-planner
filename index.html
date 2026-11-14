@@ -144,8 +144,8 @@ button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
 #guide ul,#guide ol{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.8}
 .mo{display:none}
 @media(max-width:899px){.hm{display:none}.mo{display:block}td br.mo{display:inline}td .sm+br.mo+.sm{margin-top:4px}}
-.gsteps{display:flex;flex-direction:column;gap:12px;margin-top:8px}
-.gs{display:grid;grid-template-columns:260px minmax(0,1fr);gap:14px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}
+.gsteps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px;align-items:stretch}
+.gs{display:grid;grid-template-columns:230px minmax(0,1fr);gap:14px;align-items:start;border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--card)}
 .gs .gt>b{display:block;font-size:15px;margin-bottom:4px}
 .gs .gt .gn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fffdf8;font-size:12px;font-weight:800;margin-right:6px;vertical-align:1px}
 .gs .gt p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.7}
@@ -173,6 +173,7 @@ button.pillnew{border-radius:999px;padding:8px 18px;font-weight:700}
 .ill .sg span{padding:1px 7px}.ill .sg span.on{background:var(--navy);color:#fffdf8;font-weight:700}
 .ill .mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center}
 .ill .mcal span{background:var(--card);border-radius:3px;padding:2px 0;font-size:9.5px}
+@media(max-width:1180px){.gsteps{grid-template-columns:1fr}}
 @media(max-width:899px){.gs{grid-template-columns:1fr}}
 .pfoot{text-align:center;font-size:12px;color:var(--muted);padding:6px 0 0;letter-spacing:.04em}
 @media(max-width:899px){.hc-mode{align-items:flex-start;flex-direction:row;flex-wrap:wrap}.ptitle h1{font-size:24px}.eyebrow{font-size:11px;letter-spacing:.14em}}
@@ -375,7 +376,7 @@ function rHome(){
    ${doneM.length?`<div style="overflow-x:auto"><table class="ptab"><thead><tr><th>工作名稱</th><th>完成日</th><th class="cdue">原本期限</th><th></th></tr></thead><tbody>${doneM.slice(0,15).map(t=>{const late=t.doneDate>(t.origDue||t.due);return `<tr class="rw" onclick="openTask('${t.id}')"><td><div class="tn">${esc(t.name)}</div><div class="small muted">${esc(t.category)}・${esc(t.freq||'單次')}</div></td><td style="white-space:nowrap">${md(t.doneDate)}${late?' <span class="badge b-待追蹤">延遲</span>':''}</td><td class="cdue" style="white-space:nowrap">${md(t.origDue||t.due)}</td><td style="text-align:right;white-space:nowrap"><button class="sm" onclick="event.stopPropagation();quickUndo('${t.id}')">改回未完成</button> <button class="sm danger" onclick="event.stopPropagation();quickDel('${t.id}')">刪除</button></td></tr>`;}).join('')}</tbody></table></div>`:'<div class="empty">本月還沒有完成的工作</div>'}</div>
   <div class="card"><div class="flowh"><div><b>標準工作流程</b><br><span>用一致流程管理每一項品研工作</span></div><button onclick="openGuide()">查看使用說明 →</button></div>
    <div class="fsteps">${[['設定定期工作','在「定期工作設定」建立規則，系統自動產生本月與下個月的工作。'],['每日檢視','打開總覽看今日待辦、即將到期與逾期，逾期的優先處理。'],['執行與紀錄','上傳附件、寫工作紀錄；來不及時按「延期」並填寫原因。'],['完成確認','按「完成」記錄完成日，定期工作會自動產生下一期。'],['統計回顧','在「工作統計分析」看每月完成率，匯出 CSV 供管理審查。']].map(([t,d],i)=>`<div class="fstep"><div class="fno">STEP 0${i+1}</div><b>${t}</b><p>${d}</p></div>`).join('')}</div></div>
-  <details class="card" id="guide"><summary>使用說明（請務必閱讀）</summary>
+  <details class="card" id="guide"><summary>📖 使用說明（請務必閱讀・<span class="muted" style="font-weight:600">點這裡收合／展開</span>）</summary>
    <div class="gh">資料保存與安全</div><div class="small">本工具將資料保存在<b>這台電腦的這個瀏覽器</b>中，不會上傳到任何伺服器。關閉網頁後重新開啟，資料仍會保留。</div>
    <ul><li>清除瀏覽資料時，若勾選<b>「Cookie 和其他網站資料」，所有工作、紀錄與附件都會被刪除，且無法復原</b>。</li>
     <li><b>請不要使用無痕視窗</b>，關閉後資料會遺失。</li>
@@ -404,14 +405,14 @@ function guideSteps(){
     `],
   ['每天看工作總覽','打開「🏠 工作總覽」，上面 4 張卡看今日待辦、即將到期、逾期與本月完成率。臨時要做的事，按右上角「＋ 新增工作」<span class="pn">1</span>，填名稱和日期就好。','下面的「待處理工作」逾期的排最前面，做完直接按「完成」<span class="pn">2</span>；本來就不用做的按「刪除」（30 天內可在「最近刪除」還原）。',
    `<div class="r" style="justify-content:flex-end;margin-bottom:5px"><span class="pn">1</span><span class="btn p hl">＋ 新增工作</span></div><div class="k4"><div>今日<b>4</b></div><div>到期<b style="color:var(--amber)">7</b></div><div style="border-left-color:var(--red)">逾期<b style="color:var(--red)">3</b></div><div>完成率<b style="color:var(--green)">15%</b></div></div>
-    <div class="w" style="margin-top:6px"><div class="r"><span style="flex:1"><b>更新客訴統計表</b></span>${od}<span class="pn">2</span><span class="btn p hl">完成</span><span class="btn d">刪除</span></div><div class="r" style="margin-top:4px"><span style="flex:1">HACCP 會議資料</span>${st}<span class="btn p">完成</span><span class="btn d">刪除</span></div></div>
+    <div class="w" style="margin-top:6px"><div class="r"><span style="flex:1;white-space:nowrap"><b>客訴統計表</b></span>${od}<span class="pn">2</span><span class="btn p hl">完成</span><span class="btn d">刪除</span></div><div class="r" style="margin-top:4px"><span style="flex:1;white-space:nowrap">HACCP 會議</span>${st}<span class="btn p">完成</span><span class="btn d">刪除</span></div></div>
     `],
   ['按錯了怎麼辦','不小心按到「完成」：到首頁下方「✓ 本月已完成」按「改回未完成」<span class="pn">1</span>。','刪錯了：選單「🗑️ 最近刪除」勾選後按「還原」<span class="pn">2</span>（30 天內）。',
-   `<div class="w"><div class="r" style="margin-bottom:4px"><b style="color:var(--green)">✓ 本月已完成</b></div><div class="r"><span style="flex:1">非追不可申報</span><span class="bdg" style="background:var(--amber-s);color:var(--amber)">延遲</span><span class="pn">1</span><span class="btn hl">改回未完成</span><span class="btn d">刪除</span></div></div>
-    <div class="w"><div class="r" style="margin-bottom:4px"><b>🗑️ 最近刪除</b><span class="muted">剩 28 天</span></div><div class="r"><span class="ck on"></span><span style="flex:1">預約下個月病媒防治</span><span class="pn">2</span><span class="btn hl">還原</span></div></div>
+   `<div class="w"><div class="r" style="margin-bottom:4px"><b style="color:var(--green)">✓ 本月已完成</b></div><div class="r"><span style="flex:1;white-space:nowrap">非追申報</span><span class="bdg" style="background:var(--amber-s);color:var(--amber)">延遲</span><span class="pn">1</span><span class="btn hl">改回未完成</span></div></div>
+    <div class="w"><div class="r" style="margin-bottom:4px"><b>🗑️ 最近刪除</b><span class="muted">剩 28 天</span></div><div class="r"><span class="ck on"></span><span style="flex:1;white-space:nowrap">病媒防治預約</span><span class="pn">2</span><span class="btn hl">還原</span></div></div>
     `],
   ['執行與紀錄','點任何一項工作進入「工作內容」。按「＋ 加入檔案」<span class="pn">1</span>上傳報告，在「新增工作紀錄」寫下處理情形，<b>附件與紀錄會立即儲存</b>。','來不及做完：按「延期」<span class="pn">2</span>，選新期限並填原因（原本期限會保留，統計仍算延遲）。改了上方欄位記得按下方「儲存」。',
-   `<div class="w"><b>📎 附件與工作紀錄</b><div class="r" style="margin-top:4px"><span class="pn">1</span><span class="btn hl">＋ 加入檔案</span><span class="muted">📎 測試-檢驗報告.pdf</span></div><div class="r" style="margin-top:4px"><span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)"></span><span class="btn p">新增紀錄</span></div></div>
+   `<div class="w"><b>📎 附件與工作紀錄</b><div class="r" style="margin-top:4px"><span class="pn">1</span><span class="btn hl">＋ 加入檔案</span><span class="muted">📎 測試.pdf</span></div><div class="r" style="margin-top:4px"><span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)"></span><span class="btn p">新增紀錄</span></div></div>
     <div class="r" style="justify-content:flex-end;margin-top:6px"><span class="btn p">完成</span><span class="pn">2</span><span class="btn hl">延期</span><span class="btn d">刪除</span></div>`],
   ['不定期案件','選單「📥 不定期工作」：客訴、廠內異常、供應商評鑑等，填案件名稱、類型、期限後按「新增案件」<span class="pn">1</span>。','收到委外檢驗報告：在「已收到報告」選事件和日期，按「產生工作」<span class="pn">2</span>，系統自動算 15 日內期限。',
    `<div class="w"><b>＋ 新增案件</b><div class="r" style="margin-top:4px"><span class="bar" style="height:14px;background:var(--bg);border:1px solid var(--line)"></span><span class="btn">客戶客訴案件 ▾</span></div><div class="r" style="margin-top:4px"><span class="pn">1</span><span class="btn p hl">新增案件</span></div></div>
@@ -424,7 +425,7 @@ function guideSteps(){
     `],
   ['統計與備份（每週做）','「📊 工作統計分析」看每月完成率與延遲件數，按「匯出統計 CSV」<span class="pn">1</span>貼進管理審查報告。','<b>每週一次</b>到「⚙️ 系統設定」按「下載備份」<span class="pn">2</span>，把備份檔存到雲端硬碟；換電腦時用「從備份還原」。',
    `<div class="w"><div class="r" style="margin-bottom:4px"><b style="flex:1">2026 年</b><span class="pn">1</span><span class="btn hl">匯出統計 CSV</span></div><div class="r"><span style="width:26px">10月</span><span class="bar"><i style="display:block;height:100%;width:80%;background:var(--green);border-radius:3px"></i></span><span>80%</span></div><div class="r" style="margin-top:3px"><span style="width:26px">11月</span><span class="bar"><i style="display:block;height:100%;width:25%;background:var(--green);border-radius:3px"></i></span><span>25%</span></div></div>
-    <div class="w"><b>⚙️ 系統設定</b><div class="r" style="margin-top:4px"><span class="btn">匯出 CSV</span><span class="pn">2</span><span class="btn p hl">下載備份</span><span class="btn">從備份還原</span></div></div>
+    <div class="w"><b>⚙️ 系統設定</b><div class="r" style="margin-top:4px"><span class="pn">2</span><span class="btn p hl">下載備份</span><span class="btn">從備份還原</span></div></div>
     `]];
   return S.map(([t,a,b,ill],i)=>`<div class="gs"><div class="ill" aria-hidden="true">${ill}</div><div class="gt"><b><span class="gn">${i+1}</span>${t}</b><p>${a}</p><p>${b}</p></div></div>`).join('');
 }
